@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 2,
+  "id": "blue-archive-ensemble",
+  "name": "蔚蓝档案 · 青春合影",
+  "description": "阿拜多斯对策委员会五人在晴空校园合影的明亮学院主题。",
+  "category": "动漫",
+  "style": "blue-archive-ensemble",
+  "avatarOverlay": "show",
+  "appearance": "light",
+  "brandSubtitle": "BLUE ARCHIVE ENSEMBLE",
+  "tagline": "和阿拜多斯的伙伴们，把青春与灵感写进每一天。",
+  "projectPrefix": "学院任务 · ",
+  "projectLabel": "选择学院任务",
+  "statusText": "AFTER SCHOOL ONLINE",
+  "quote": "青春合影 · 灵感集合",
+  "image": "background.png",
+  "preview": "preview.png",
+  "colors": {
+    "background": "#edf8ff",
+    "panel": "#ffffff",
+    "panelAlt": "#f4f8ff",
+    "accent": "#2a8be5",
+    "accentAlt": "#55bff1",
+    "secondary": "#f3a6c7",
+    "highlight": "#ffd166",
+    "text": "#24344a",
+    "muted": "#6d7c91",
+    "line": "rgba(42, 139, 229, .24)"
+  }
+}

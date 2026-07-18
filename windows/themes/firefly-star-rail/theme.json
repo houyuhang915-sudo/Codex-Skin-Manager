@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 2,
+  "id": "firefly-star-rail",
+  "name": "流萤 · 星海微光",
+  "description": "流萤、月夜花海与匹诺康尼灯火构成的静谧星海主题。",
+  "category": "角色",
+  "style": "firefly-star-rail",
+  "avatarOverlay": "show",
+  "appearance": "dark",
+  "brandSubtitle": "FIREFLY STELLAR GLOW",
+  "tagline": "把微小的光汇成星海，陪你写完每一段旅程。",
+  "projectPrefix": "萤火航线 · ",
+  "projectLabel": "选择萤火航线",
+  "statusText": "FIREFLY SIGNAL ONLINE",
+  "quote": "萤光未眠 · 星海同行",
+  "image": "background.png",
+  "preview": "preview.png",
+  "colors": {
+    "background": "#090f28",
+    "panel": "#111936",
+    "panelAlt": "#172348",
+    "accent": "#69ddc8",
+    "accentAlt": "#a8f1df",
+    "secondary": "#8da8ff",
+    "highlight": "#8e75d8",
+    "text": "#f0f5ff",
+    "muted": "#a9b9d1",
+    "line": "rgba(105, 221, 200, .28)"
+  }
+}

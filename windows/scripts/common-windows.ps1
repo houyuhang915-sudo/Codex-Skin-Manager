@@ -1,3 +1,4 @@
+﻿$ProgressPreference = 'SilentlyContinue'
 . (Join-Path $PSScriptRoot 'config-utf8.ps1')
 
 function Enter-DreamSkinOperationLock {
@@ -11,7 +12,7 @@ function Enter-DreamSkinOperationLock {
   }
   if (-not $acquired) {
     $mutex.Dispose()
-    throw 'Another Codex Dream Skin install, start, restore, or verify operation is already running.'
+    throw 'Codex 皮肤管理器正在执行另一项安装、启动、恢复或验证操作。'
   }
   return $mutex
 }
@@ -78,12 +79,22 @@ function Get-DreamSkinProcessExecutablePath {
 function Get-DreamSkinNodeRuntime {
   param([int]$MinimumMajor = 22)
 
-  $command = Get-Command node.exe -ErrorAction SilentlyContinue
-  if (-not $command) { $command = Get-Command node -ErrorAction SilentlyContinue }
-  if (-not $command) { throw "Node.js $MinimumMajor or newer is required and was not found in PATH." }
-  $version = "$(& $command.Source -p 'process.versions.node' 2>$null)".Trim()
+  $engineRoot = Split-Path -Parent $PSScriptRoot
+  $bundledNode = Join-Path $engineRoot 'runtime\node.exe'
+  $isWindowsRuntime = [System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT
+  $runtimeCommand = if ($isWindowsRuntime -and (Test-Path -LiteralPath $bundledNode)) {
+    $bundledNode
+  } else {
+    $command = Get-Command node.exe -ErrorAction SilentlyContinue
+    if (-not $command) { $command = Get-Command node -ErrorAction SilentlyContinue }
+    if ($command) { $command.Source } else { $null }
+  }
+  if (-not $runtimeCommand) {
+    throw "The bundled Node.js runtime is missing and Node.js $MinimumMajor or newer was not found in PATH."
+  }
+  $version = "$(& $runtimeCommand -p 'process.versions.node' 2>$null)".Trim()
   if ($LASTEXITCODE -ne 0 -or -not $version) { throw 'The Node.js runtime could not be validated.' }
-  $runtimePath = "$(& $command.Source -p 'process.execPath' 2>$null)".Trim()
+  $runtimePath = "$(& $runtimeCommand -p 'process.execPath' 2>$null)".Trim()
   if ($LASTEXITCODE -ne 0 -or -not $runtimePath -or -not (Test-Path -LiteralPath $runtimePath)) {
     throw 'The Node.js executable path could not be validated.'
   }
@@ -398,12 +409,12 @@ function Get-DreamSkinProcessStartedAt {
   }
 }
 
-function Stop-DreamSkinRecordedInjector {
+function Test-DreamSkinRecordedInjector {
   param([AllowNull()][object]$State)
-  if ($null -eq $State -or -not $State.injectorPid) { return $true }
+  if ($null -eq $State -or -not $State.injectorPid) { return $false }
   $processId = [int]$State.injectorPid
   $process = Get-CimInstance Win32_Process -Filter "ProcessId = $processId" -ErrorAction SilentlyContinue
-  if (-not $process) { return $true }
+  if (-not $process) { return $false }
 
   $expectedInjector = if ($State.injectorPath) {
     "$($State.injectorPath)"
@@ -415,7 +426,7 @@ function Stop-DreamSkinRecordedInjector {
   $processPath = Get-DreamSkinProcessExecutablePath -ProcessInfo $process
   $commandLine = "$($process.CommandLine)"
   if (-not $processPath -or -not $commandLine) {
-    throw "The recorded injector PID $processId is running, but its identity cannot be inspected. State was preserved."
+    return $false
   }
   $isNodeExecutable = [System.IO.Path]::GetFileName("$processPath") -ieq 'node.exe'
   $nodeMatches = -not $State.nodePath -or
@@ -435,17 +446,29 @@ function Stop-DreamSkinRecordedInjector {
   }
   $startedAt = Get-DreamSkinProcessStartedAt -ProcessId $processId
   $startMatches = -not $State.injectorStartedAt -or $startedAt -eq "$($State.injectorStartedAt)"
-  $identityMatches = [bool]($isNodeExecutable -and $nodeMatches -and $injectorMatches -and $startMatches)
+  return [bool]($isNodeExecutable -and $nodeMatches -and $injectorMatches -and $startMatches)
+}
 
-  if (-not $identityMatches) {
+function Stop-DreamSkinRecordedInjector {
+  param([AllowNull()][object]$State)
+  if ($null -eq $State -or -not $State.injectorPid) { return $true }
+  $processId = [int]$State.injectorPid
+  $process = Get-CimInstance Win32_Process -Filter "ProcessId = $processId" -ErrorAction SilentlyContinue
+  if (-not $process) { return $true }
+
+  if (-not (Test-DreamSkinRecordedInjector -State $State)) {
     Write-Warning "Skipped stale injector PID $processId because its visible identity does not match the saved Dream Skin process."
     return $false
   }
 
   Stop-Process -Id $processId -Force -ErrorAction Stop
-  try { Wait-Process -Id $processId -Timeout 5 -ErrorAction Stop } catch {}
-  if (Get-Process -Id $processId -ErrorAction SilentlyContinue) {
-    throw "The recorded Dream Skin injector did not stop: PID $processId"
+  $deadline = (Get-Date).AddSeconds(10)
+  do {
+    if (-not (Test-DreamSkinRecordedInjector -State $State)) { return $true }
+    Start-Sleep -Milliseconds 200
+  } while ((Get-Date) -lt $deadline)
+  if (Test-DreamSkinRecordedInjector -State $State) {
+    throw "The recorded Dream Skin injector did not stop within 10 seconds: PID $processId"
   }
   return $true
 }
@@ -490,5 +513,5 @@ function Stop-DreamSkinCodex {
 function Confirm-DreamSkinRestart {
   param([string]$Message)
   $shell = New-Object -ComObject WScript.Shell
-  return $shell.Popup($Message, 0, 'Codex Dream Skin', 52) -eq 6
+  return $shell.Popup($Message, 0, 'Codex 皮肤管理器', 52) -eq 6
 }

@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 2,
+  "id": "cyrene-star-rail",
+  "name": "昔涟 · 星海回响",
+  "description": "昔涟与花瓣、月色和星海涟漪构成的深色幻想创作主题。",
+  "category": "角色",
+  "style": "cyrene-star-rail",
+  "avatarOverlay": "show",
+  "appearance": "dark",
+  "brandSubtitle": "CYRENE STAR SEA",
+  "tagline": "让往昔的涟漪，在星海里化作新的答案。",
+  "projectPrefix": "星海坐标 · ",
+  "projectLabel": "选择星海坐标",
+  "statusText": "CYRENE MEMORY ONLINE",
+  "quote": "再度和你 · 写向未来",
+  "image": "background.png",
+  "preview": "preview.png",
+  "colors": {
+    "background": "#10183a",
+    "panel": "#171f46",
+    "panelAlt": "#2a2455",
+    "accent": "#ef8bd3",
+    "accentAlt": "#ffc3eb",
+    "secondary": "#8fdcf1",
+    "highlight": "#a38cf4",
+    "text": "#fff7ff",
+    "muted": "#c7bdd7",
+    "line": "rgba(239, 139, 211, .30)"
+  }
+}

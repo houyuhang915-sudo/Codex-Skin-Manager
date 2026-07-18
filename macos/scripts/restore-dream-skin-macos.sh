@@ -55,6 +55,12 @@ if [ "$UNINSTALL" = "true" ]; then
   /bin/rm -f "$HOME/Desktop/Codex Dream Skin - Customize.command"
   /bin/rm -f "$HOME/Desktop/Codex Dream Skin - Verify.command"
   /bin/rm -f "$HOME/Desktop/Codex Dream Skin - Restore.command"
+  /bin/rm -f "$HOME/Desktop/Codex 皮肤管理器.command"
+  /bin/rm -f "$HOME/Desktop/Codex 皮肤管理器 - 自定义.command"
+  /bin/rm -f "$HOME/Desktop/Codex 皮肤管理器 - 验证.command"
+  /bin/rm -f "$HOME/Desktop/Codex 皮肤管理器 - 恢复.command"
+  /bin/rm -rf "$HOME/Desktop/Codex Dream Skin.app"
+  /bin/rm -rf "$HOME/Desktop/Codex 皮肤管理器.app"
 fi
 
-printf 'Codex Dream Skin Studio was removed and the requested macOS restore actions completed successfully.\n'
+printf 'Codex 皮肤管理器已移除，指定的 macOS 恢复操作已完成。\n'

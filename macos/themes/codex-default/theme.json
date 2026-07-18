@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 2,
+  "id": "codex-default",
+  "name": "Codex 默认原版",
+  "description": "停止主题注入，恢复 Codex 官方原生界面。",
+  "category": "系统",
+  "mode": "original",
+  "style": "codex-default",
+  "avatarOverlay": "show",
+  "appearance": "auto",
+  "brandSubtitle": "CODEX ORIGINAL",
+  "tagline": "回到 Codex 官方默认体验。",
+  "projectPrefix": "选择项目 · ",
+  "projectLabel": "选择项目",
+  "statusText": "CODEX ORIGINAL",
+  "quote": "ORIGINAL CODEX",
+  "image": "background.png",
+  "preview": "preview.png",
+  "colors": {
+    "background": "#ffffff",
+    "panel": "#ffffff",
+    "panelAlt": "#f7f7f7",
+    "accent": "#5f6368",
+    "accentAlt": "#9aa0a6",
+    "secondary": "#4285f4",
+    "highlight": "#a142f4",
+    "text": "#202124",
+    "muted": "#70757a",
+    "line": "rgba(32, 33, 36, .14)"
+  }
+}

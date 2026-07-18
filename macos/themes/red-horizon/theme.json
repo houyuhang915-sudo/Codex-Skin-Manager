@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 2,
+  "id": "red-horizon",
+  "name": "OpenAI 是人民的 AI",
+  "description": "红白未来地平线与中国视觉元素，清晰、克制并面向每一个人。",
+  "category": "中国未来",
+  "style": "red-horizon",
+  "avatarOverlay": "show",
+  "appearance": "light",
+  "brandSubtitle": "OPENAI FOR EVERYONE",
+  "tagline": "用先进的工具，为每一个人创造更多可能。",
+  "projectPrefix": "人民的创造力 · ",
+  "projectLabel": "选择人民的创造",
+  "statusText": "PEOPLE'S AI ONLINE",
+  "quote": "科技向前 · 人民向上",
+  "image": "background.png",
+  "preview": "preview.png",
+  "colors": {
+    "background": "#fff8f7",
+    "panel": "#ffffff",
+    "panelAlt": "#fff0ee",
+    "accent": "#d91f2a",
+    "accentAlt": "#f04a4f",
+    "secondary": "#e7a12d",
+    "highlight": "#691b25",
+    "text": "#22191a",
+    "muted": "#746264",
+    "line": "rgba(217, 31, 42, .24)"
+  }
+}

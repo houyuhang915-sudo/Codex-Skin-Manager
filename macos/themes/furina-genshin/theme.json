@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 2,
+  "id": "furina-genshin",
+  "name": "芙宁娜 · 水色剧场",
+  "description": "芙宁娜与枫丹水庭、歌剧帷幕构成的清澈舞台主题。",
+  "category": "角色",
+  "style": "furina-genshin",
+  "avatarOverlay": "show",
+  "appearance": "light",
+  "brandSubtitle": "FURINA AQUA THEATRE",
+  "tagline": "让每一次思考，都像水上舞台般从容而闪耀。",
+  "projectPrefix": "剧场席位 · ",
+  "projectLabel": "选择剧场席位",
+  "statusText": "AQUA THEATRE ONLINE",
+  "quote": "水色开幕 · 灵感登场",
+  "image": "background.png",
+  "preview": "preview.png",
+  "colors": {
+    "background": "#eef7ff",
+    "panel": "#ffffff",
+    "panelAlt": "#e7f1fb",
+    "accent": "#2668c7",
+    "accentAlt": "#58aee8",
+    "secondary": "#d7b66c",
+    "highlight": "#243b78",
+    "text": "#1d2f4d",
+    "muted": "#64748b",
+    "line": "rgba(38, 104, 199, .24)"
+  }
+}

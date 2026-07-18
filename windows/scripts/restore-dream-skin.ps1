@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
   [int]$Port = 9335,
   [switch]$Uninstall,
@@ -132,8 +132,15 @@ try {
       $startMenu = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs'
       @(
         (Join-Path $desktop 'Codex Dream Skin.lnk'),
+        (Join-Path $desktop 'Codex Dream Skin Themes.lnk'),
         (Join-Path $desktop 'Codex Dream Skin - Restore.lnk'),
-        (Join-Path $startMenu 'Codex Dream Skin.lnk')
+        (Join-Path $startMenu 'Codex Dream Skin.lnk'),
+        (Join-Path $startMenu 'Codex Dream Skin Themes.lnk'),
+        (Join-Path $desktop 'Codex 皮肤启动器.lnk'),
+        (Join-Path $desktop 'Codex 皮肤管理器.lnk'),
+        (Join-Path $desktop 'Codex 皮肤管理器 - 恢复原版.lnk'),
+        (Join-Path $startMenu 'Codex 皮肤启动器.lnk'),
+        (Join-Path $startMenu 'Codex 皮肤管理器.lnk')
       ) | ForEach-Object { Remove-Item -LiteralPath $_ -Force -ErrorAction SilentlyContinue }
     }
 

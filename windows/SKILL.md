@@ -9,7 +9,7 @@ Apply a reversible renderer skin through Chromium DevTools Protocol while launch
 
 ## Workflow
 
-1. Install Node.js 22 or newer, close Codex, then run `scripts/install-dream-skin.ps1` once to set the matching official base colors and create launch/restore shortcuts.
+1. Close Codex, then run the NSIS installer or `scripts/install-dream-skin.ps1` once to deploy the theme library and create launch, manager, and restore shortcuts. The installer includes Node.js.
 2. Run `scripts/start-dream-skin.ps1`. The shortcut asks before restarting an already-open Codex app; CLI callers must explicitly add `-RestartExisting`.
 3. Run `scripts/verify-dream-skin.ps1 -ScreenshotPath <absolute-path>` after launch. Treat a missing hero, native composer, sidebar skin, or injection marker as failure. The native suggestion count is responsive and may be two to four.
 4. Inspect the screenshot against `references/qa-inventory.md`. Verify both the home screen and a normal task before signing off.
@@ -45,7 +45,10 @@ node --check assets\renderer-inject.js
 - `scripts/config-utf8.ps1`: atomic UTF-8 configuration backup, selective restore, and explicit recovery.
 - `assets/dream-skin.css`: full visual layer.
 - `assets/renderer-inject.js`: idempotent DOM integration and cleanup.
-- `assets/dream-reference.png`: user-provided visual reference used only in cropped decorative regions.
+- `themes/`: five schema 2 single-image theme packs shared with macOS.
+- `scripts/theme-manager.ps1`: graphical theme preview and selection app.
+- `scripts/switch-theme.ps1`: validates, copies, and hot-applies a selected theme.
+- `installer/CodexDreamSkin.nsi`: per-user one-click installer and uninstaller.
 - `references/qa-inventory.md`: required functional and visual signoff coverage.
 - `references/runtime-notes.md`: troubleshooting and update behavior.
 - `tests/run-tests.ps1`: configuration, state, recovery, payload, and CDP validation regression checks.

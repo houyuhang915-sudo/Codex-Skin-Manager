@@ -29,8 +29,11 @@ if [ -f "$STATE_PATH" ]; then
 fi
 LIVE="false"
 if [ -f "$STATE_PATH" ] && verified_cdp_endpoint "$PORT"; then
-  "$NODE" "$INJECTOR" --verify --port "$PORT" --theme-dir "$THEME_DIR" --timeout-ms 12000 >/dev/null
-  LIVE="true"
+  if "$NODE" "$INJECTOR" --verify --port "$PORT" --theme-dir "$THEME_DIR" --timeout-ms 12000 >/dev/null; then
+    LIVE="true"
+  elif [ "$REQUIRE_LIVE" = "true" ]; then
+    fail "A Codex CDP session is present, but the current theme payload did not verify."
+  fi
 fi
 [ "$REQUIRE_LIVE" = "false" ] || [ "$LIVE" = "true" ] || fail "No verified live Dream Skin session is active."
 
@@ -38,7 +41,7 @@ fi
   const payload = JSON.parse(process.argv[1]);
   const result = {
     pass: true,
-    product: "Codex Dream Skin Studio",
+    product: "Codex 皮肤管理器",
     version: process.argv[2],
     platform: `darwin-${process.argv[3]}`,
     codexVersion: process.argv[4],

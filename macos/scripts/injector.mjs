@@ -4,9 +4,10 @@ import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "..");
-const SKIN_VERSION = "1.1.1";
+const SKIN_VERSION = "1.5.0";
 const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost", "[::1]"]);
 const MAX_ART_BYTES = 16 * 1024 * 1024;
+const AVATAR_STYLE_ID = "codex-dream-skin-avatar-style";
 
 function parseArgs(argv) {
   const options = {
@@ -152,19 +153,78 @@ async function listAppTargets(port) {
   }
 }
 
+function isAvatarOverlayTarget(target) {
+  try {
+    const route = new URL(target.url).searchParams.get("initialRoute");
+    return route === "/avatar-overlay";
+  } catch {
+    return false;
+  }
+}
+
+async function connectAvatarOverlayTargets(port) {
+  const connected = [];
+  for (const target of (await listAppTargets(port)).filter(isAvatarOverlayTarget)) {
+    try {
+      connected.push({ target, session: await connectTarget(target, port) });
+    } catch {}
+  }
+  return connected;
+}
+
+async function applyAvatarOverlayTheme(session) {
+  return session.evaluate(`(() => {
+    const id = ${JSON.stringify(AVATAR_STYLE_ID)};
+    document.getElementById(id)?.remove();
+    delete document.documentElement.dataset.dreamSkinAvatar;
+    return { pass: true, kind: 'avatar-overlay', hidden: false };
+  })()`);
+}
+
+async function removeAvatarOverlayTheme(session) {
+  return session.evaluate(`(() => {
+    document.getElementById(${JSON.stringify(AVATAR_STYLE_ID)})?.remove();
+    delete document.documentElement.dataset.dreamSkinAvatar;
+    return true;
+  })()`);
+}
+
+async function verifyAvatarOverlayTheme(session) {
+  return session.evaluate(`(() => {
+    const hidden = Boolean(document.getElementById(${JSON.stringify(AVATAR_STYLE_ID)}));
+    return { pass: !hidden, kind: 'avatar-overlay', hidden };
+  })()`);
+}
+
 async function probeSession(session) {
   return session.evaluate(`(() => {
+    const settingsSidebar = document.querySelector('div.app-shell-left-panel');
+    const settingsSurface = document.querySelector('div.main-surface');
+    const settingsText = settingsSidebar?.textContent ?? '';
+    const settings = Boolean(
+      settingsSidebar &&
+      settingsSurface &&
+      /(返回应用|Back to app)/i.test(settingsText) &&
+      /(常规|General)/i.test(settingsText) &&
+      /(外观|Appearance)/i.test(settingsText)
+    );
     const markers = {
       shell: Boolean(document.querySelector('main.main-surface')),
       sidebar: Boolean(document.querySelector('aside.app-shell-left-panel')),
       composer: Boolean(document.querySelector('.composer-surface-chrome')),
       main: Boolean(document.querySelector('[role="main"]')),
+      library: Boolean(
+        document.querySelector('main.main-surface input') &&
+        document.querySelector('main.main-surface [role="group"]')
+      ),
+      settings,
     };
     return {
       title: document.title,
       href: location.href,
       markers,
-      codex: markers.shell && markers.sidebar && (markers.composer || markers.main),
+      codex: markers.settings ||
+        (markers.shell && markers.sidebar && (markers.composer || markers.main || markers.library)),
     };
   })()`);
 }
@@ -216,12 +276,15 @@ async function loadTheme(themeDir) {
 
   const configPath = path.join(assetsRoot, "theme.json");
   const raw = JSON.parse(await fs.readFile(configPath, "utf8"));
-  if (raw.schemaVersion !== 1 || typeof raw.image !== "string" || !raw.image) {
+  if (![1, 2].includes(raw.schemaVersion) || typeof raw.image !== "string" || !raw.image) {
     throw new Error(`${configPath} has an unsupported schema or image field`);
   }
   if (path.basename(raw.image) !== raw.image) throw new Error("Theme image must stay inside its theme directory");
   const text = (value, fallback, max) => typeof value === "string" && value.trim()
     ? value.trim().slice(0, max) : fallback;
+  const identifier = (value, fallback) => typeof value === "string" && /^[a-z0-9-]{1,80}$/i.test(value.trim())
+    ? value.trim().toLowerCase() : fallback;
+  const choice = (value, allowed, fallback) => allowed.includes(value) ? value : fallback;
   const color = (value, fallback) => {
     if (typeof value !== "string") return fallback;
     const normalized = value.trim();
@@ -229,29 +292,45 @@ async function loadTheme(themeDir) {
       ? normalized
       : fallback;
   };
+  const defaultColors = {
+    background: "#071116",
+    panel: "#0b1a20",
+    panelAlt: "#10272c",
+    accent: "#7cff46",
+    accentAlt: "#b8ff3d",
+    secondary: "#36d7e8",
+    highlight: "#642a8c",
+    text: "#e9fff1",
+    muted: "#9ebdb3",
+    line: "rgba(124, 255, 70, .28)",
+  };
+  const palette = (value, fallback = defaultColors) => {
+    const source = value && typeof value === "object" ? value : {};
+    return Object.fromEntries(Object.keys(defaultColors).map((key) => [
+      key,
+      color(source[key], fallback[key]),
+    ]));
+  };
+  const sharedColors = palette(raw.colors);
   const theme = {
-    schemaVersion: 1,
+    schemaVersion: raw.schemaVersion,
     id: text(raw.id, "custom", 80),
-    name: text(raw.name, "Codex Dream Skin", 80),
-    brandSubtitle: text(raw.brandSubtitle, "CODEX DREAM SKIN", 80),
+    name: text(raw.name, "Codex 皮肤管理器", 80),
+    style: identifier(raw.style, "miku-stage"),
+    avatarOverlay: "show",
+    appearance: choice(raw.appearance, ["auto", "light", "dark"], "auto"),
+    brandSubtitle: text(raw.brandSubtitle, "CODEX SKIN MANAGER", 80),
     tagline: text(raw.tagline, "Make something wonderful.", 160),
     projectPrefix: text(raw.projectPrefix, "选择项目 · ", 80),
     projectLabel: text(raw.projectLabel, "◉  选择项目", 80),
-    statusText: text(raw.statusText, "DREAM SKIN ONLINE", 80),
+    statusText: text(raw.statusText, "SKIN ACTIVE", 80),
     quote: text(raw.quote, "MAKE SOMETHING WONDERFUL", 80),
     image: raw.image,
-    colors: {
-      background: color(raw.colors?.background, "#071116"),
-      panel: color(raw.colors?.panel, "#0b1a20"),
-      panelAlt: color(raw.colors?.panelAlt, "#10272c"),
-      accent: color(raw.colors?.accent, "#7cff46"),
-      accentAlt: color(raw.colors?.accentAlt, "#b8ff3d"),
-      secondary: color(raw.colors?.secondary, "#36d7e8"),
-      highlight: color(raw.colors?.highlight, "#642a8c"),
-      text: color(raw.colors?.text, "#e9fff1"),
-      muted: color(raw.colors?.muted, "#9ebdb3"),
-      line: color(raw.colors?.line, "rgba(124, 255, 70, .28)"),
-    },
+    colors: sharedColors,
+    colorsLight: raw.colorsLight && typeof raw.colorsLight === "object"
+      ? palette(raw.colorsLight, sharedColors) : undefined,
+    colorsDark: raw.colorsDark && typeof raw.colorsDark === "object"
+      ? palette(raw.colorsDark, sharedColors) : undefined,
   };
   const imagePath = path.join(assetsRoot, theme.image);
   const imageStat = await fs.stat(imagePath);
@@ -333,9 +412,21 @@ async function verifySession(session) {
     const cardBoxes = suggestions ? [...suggestions.querySelectorAll('button')].map(box) : [];
     const visibleCards = cardBoxes.filter((item) => item?.visible);
     const hero = box(home?.firstElementChild?.firstElementChild?.firstElementChild);
-    const projectButton = box(home?.querySelector('.group\\\\/project-selector > button'));
+    const projectButton = box(home?.querySelector(
+      '.group\\\\/project-selector > button, .horizontal-scroll-fade-mask[role="group"] button'
+    ));
     const composer = box(document.querySelector('.composer-surface-chrome'));
+    const library = document.querySelector(
+      'main.main-surface.dream-skin-library-shell, .dream-skin-library-page'
+    );
     const sidebar = box(document.querySelector('aside.app-shell-left-panel'));
+    const settingsSidebar = box(document.querySelector('.dream-skin-settings-sidebar'));
+    const settingsShellNode = document.querySelector('.dream-skin-settings-shell');
+    const settingsShell = box(settingsShellNode);
+    const settingsCardNode = settingsShellNode?.querySelector(
+      '[class~="rounded-2xl"][class~="border-token-border"]'
+    );
+    const settingsCard = box(settingsCardNode);
     const chrome = document.getElementById('codex-dream-skin-chrome');
     const result = {
       installed: document.documentElement.classList.contains('codex-dream-skin'),
@@ -350,16 +441,29 @@ async function verifySession(session) {
       visibleCardCount: visibleCards.length,
       projectButton,
       composer,
+      libraryPresent: Boolean(library),
       sidebar,
+      settingsPresent: document.documentElement.dataset.dreamView === 'settings',
+      settingsSidebar,
+      settingsShell,
+      settingsCard,
+      settingsCardBackground: settingsCardNode ? getComputedStyle(settingsCardNode).backgroundColor : null,
+      settingsCardColor: settingsCardNode ? getComputedStyle(settingsCardNode).color : null,
       viewport: { width: innerWidth, height: innerHeight },
       documentOverflow: {
         x: document.documentElement.scrollWidth > document.documentElement.clientWidth,
         y: document.documentElement.scrollHeight > document.documentElement.clientHeight,
       },
     };
+    const routePass = result.settingsPresent
+      ? Boolean(result.settingsSidebar?.visible && result.settingsShell?.visible)
+      : Boolean(
+          (result.composer?.visible || result.libraryPresent) &&
+          result.sidebar?.visible
+        );
     const basePass = result.installed && result.version === ${JSON.stringify(SKIN_VERSION)} &&
       result.stylePresent && result.chromePresent && result.chromePointerEvents === 'none' &&
-      Boolean(result.composer?.visible) && Boolean(result.sidebar?.visible) && !result.documentOverflow.x;
+      routePass && !result.documentOverflow.x;
     // Project selector markup varies across Codex builds — soft requirement.
     const homePass = !result.homeRoute || (
       result.homePresent && result.hero?.visible && result.hero.width >= 280 && result.hero.height >= 120 &&
@@ -406,7 +510,7 @@ async function capture(session, outputPath) {
 
 async function runOneShot(options) {
   const connected = await connectCodexTargets(options.port, options.timeoutMs);
-  const loaded = (options.mode === "once" || options.reload) ? await loadPayload(options.themeDir) : null;
+  const loaded = options.mode === "remove" ? null : await loadPayload(options.themeDir);
   const payload = loaded?.payload ?? null;
   const results = [];
   let screenshotCaptured = false;
@@ -436,13 +540,25 @@ async function runOneShot(options) {
     }
   }
 
+  for (const { target, session } of await connectAvatarOverlayTargets(options.port)) {
+    try {
+      let result;
+      if (options.mode === "remove") result = await removeAvatarOverlayTheme(session);
+      else if (options.mode === "once" || options.reload) result = await applyAvatarOverlayTheme(session, loaded.theme);
+      else result = await verifyAvatarOverlayTheme(session, loaded.theme);
+      results.push({ targetId: target.id, title: target.title, url: target.url, probe: { avatarOverlay: true }, result });
+    } finally {
+      session.close();
+    }
+  }
+
   console.log(JSON.stringify({ mode: options.mode, version: SKIN_VERSION, port: options.port, targets: results }, null, 2));
   const failed = results.length === 0 || results.some((item) => options.mode === "remove" ? item.result !== true : !item.result?.pass);
   if (failed) process.exitCode = 2;
 }
 
 async function runWatch(options) {
-  const { payload } = await loadPayload(options.themeDir);
+  const { payload, theme } = await loadPayload(options.themeDir);
   const sessions = new Map();
   const rejected = new Set();
   let stopping = false;
@@ -473,6 +589,17 @@ async function runWatch(options) {
       let session;
       try {
         session = await connectTarget(target, options.port);
+        if (isAvatarOverlayTarget(target)) {
+          session.on("Page.loadEventFired", () => {
+            setTimeout(() => applyAvatarOverlayTheme(session, theme).catch((error) => {
+              console.error(`[dream-skin] avatar overlay reinject failed: ${error.message}`);
+            }), 250);
+          });
+          await applyAvatarOverlayTheme(session, theme);
+          sessions.set(target.id, session);
+          console.log(`[dream-skin] configured avatar overlay ${target.id}`);
+          continue;
+        }
         const probe = await probeSession(session);
         if (!probe?.codex) {
           session.close();
@@ -511,12 +638,22 @@ try {
       version: SKIN_VERSION,
       themeId: loaded.theme.id,
       themeName: loaded.theme.name,
+      themeStyle: loaded.theme.style,
+      avatarOverlay: loaded.theme.avatarOverlay,
+      appearance: loaded.theme.appearance,
+      hasColorsLight: Boolean(loaded.theme.colorsLight),
+      hasColorsDark: Boolean(loaded.theme.colorsDark),
       imageBytes: loaded.imageBytes,
       payloadBytes: Buffer.byteLength(loaded.payload),
     }, null, 2));
   } else if (options.mode === "watch") await runWatch(options);
   else await runOneShot(options);
+  if (options.mode !== "watch") {
+    await new Promise((resolve) => process.stdout.write("", resolve));
+    process.exit(process.exitCode ?? 0);
+  }
 } catch (error) {
   console.error(`[dream-skin] ${error.stack || error.message}`);
-  process.exitCode = 1;
+  await new Promise((resolve) => process.stderr.write("", resolve));
+  process.exit(1);
 }

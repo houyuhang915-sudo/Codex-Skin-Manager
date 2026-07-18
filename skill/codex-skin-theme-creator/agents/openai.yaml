@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex 主题创建器"
+  short_description: "生成主题并自动加入 Codex 皮肤管理器主题库"
+  default_prompt: "Use $codex-skin-theme-creator to turn this image or idea into a Codex skin theme and add it to my manager."

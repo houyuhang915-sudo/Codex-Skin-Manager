@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
   "id": "custom-1784123441349",
-  "name": "Dream Skin",
-  "brandSubtitle": "CODEX DREAM SKIN",
+  "name": "Codex 皮肤管理器",
+  "brandSubtitle": "CODEX SKIN MANAGER",
   "tagline": "把喜欢的画面变成可交互的 Codex 工作台。",
   "projectPrefix": "选择项目 · ",
   "projectLabel": "◉  选择项目",
   "statusText": "THEME ONLINE",
   "quote": "Make something wonderful",
-  "image": "background-20260715-215040-40507.jpg",
+  "image": "portal-hero.png",
   "colors": {
     "background": "#F7F4F5",
     "panel": "#FFFFFF",

@@ -4,6 +4,8 @@
   const STYLE_ID = "codex-dream-skin-style";
   const CHROME_ID = "codex-dream-skin-chrome";
   const SHELL_ATTR = "data-dream-shell";
+  const THEME_ATTR = "data-dream-theme-style";
+  const VIEW_ATTR = "data-dream-view";
   const VERSION = __DREAM_SKIN_VERSION_JSON__;
   const THEME = themeConfig && typeof themeConfig === "object" ? themeConfig : {};
   const THEME_VARIABLES = [
@@ -114,7 +116,11 @@
   };
 
   const applyTheme = (root, shell) => {
-    const colors = THEME.colors || {};
+    const sharedColors = THEME.colors || {};
+    const shellColors = shell === "light" ? THEME.colorsLight : THEME.colorsDark;
+    const colors = shellColors && typeof shellColors === "object"
+      ? { ...sharedColors, ...shellColors }
+      : sharedColors;
     const accent = colors.accent || (shell === "light" ? "#e25563" : "#7cff46");
     const accentAlt = colors.accentAlt || accent;
     const secondary = colors.secondary || (shell === "light" ? "#f3a8af" : "#36d7e8");
@@ -122,17 +128,16 @@
 
     let variables;
     if (shell === "light") {
-      // Structural tokens stay light so banners stay readable; accents follow theme.
       variables = {
-        "--ds-bg": "#f6f2f3",
-        "--ds-panel": "#ffffff",
-        "--ds-panel-2": "#fff7f8",
+        "--ds-bg": colors.background || "#f6f2f3",
+        "--ds-panel": colors.panel || "#ffffff",
+        "--ds-panel-2": colors.panelAlt || "#fff7f8",
         "--ds-green": accent,
         "--ds-lime": accentAlt,
         "--ds-cyan": secondary,
         "--ds-purple": highlight,
-        "--ds-text": "#1f1a1b",
-        "--ds-muted": "#6b5f62",
+        "--ds-text": colors.text || "#1f1a1b",
+        "--ds-muted": colors.muted || "#6b5f62",
         "--ds-line": colors.line || "rgba(196, 120, 128, .22)",
       };
     } else {
@@ -153,7 +158,7 @@
     for (const [name, value] of Object.entries(variables)) {
       if (typeof value === "string" && value) root.style.setProperty(name, value);
     }
-    root.style.setProperty("--dream-skin-name", cssString(THEME.name || "Codex Dream Skin"));
+    root.style.setProperty("--dream-skin-name", cssString(THEME.name || "Codex 皮肤管理器"));
     root.style.setProperty("--dream-skin-tagline", cssString(THEME.tagline || "Make something wonderful."));
     root.style.setProperty("--dream-skin-project-prefix", cssString(THEME.projectPrefix || "选择项目 · "));
     root.style.setProperty("--dream-skin-project-label", cssString(THEME.projectLabel || "◉  选择项目"));
@@ -169,9 +174,12 @@
     if (window[DISABLED_KEY]) return;
     const root = document.documentElement;
     if (!root) return;
-    const shell = detectShellMode();
+    const shell = THEME.appearance === "light" || THEME.appearance === "dark"
+      ? THEME.appearance
+      : detectShellMode();
     root.classList.add("codex-dream-skin");
     root.setAttribute(SHELL_ATTR, shell);
+    root.setAttribute(THEME_ATTR, THEME.style || "miku-stage");
     root.style.setProperty("--dream-skin-art", `url("${artUrl}")`);
     applyTheme(root, shell);
 
@@ -186,7 +194,33 @@
       style.dataset.dreamSkinVersion = VERSION;
     }
 
-    const shellMain = document.querySelector("main.main-surface") || document.querySelector("main");
+    const settingsSidebar = [...document.querySelectorAll(".app-shell-left-panel")].find((candidate) => {
+      if (candidate.tagName === "ASIDE" || !candidate.querySelector("nav")) return false;
+      const text = candidate.textContent || "";
+      return /(返回应用|Back to app)/i.test(text) &&
+        /(常规|General)/i.test(text) &&
+        /(外观|Appearance)/i.test(text);
+    }) || null;
+    const settingsShell = settingsSidebar
+      ? [...document.querySelectorAll(".main-surface")].find((candidate) =>
+          candidate.tagName !== "MAIN")
+      : null;
+    const isSettings = Boolean(settingsSidebar && settingsShell);
+    for (const candidate of document.querySelectorAll(".dream-skin-settings-sidebar")) {
+      if (candidate !== settingsSidebar) candidate.classList.remove("dream-skin-settings-sidebar");
+    }
+    for (const candidate of document.querySelectorAll(".dream-skin-settings-shell")) {
+      if (candidate !== settingsShell) candidate.classList.remove("dream-skin-settings-shell");
+    }
+    if (settingsSidebar) settingsSidebar.classList.add("dream-skin-settings-sidebar");
+    if (settingsShell) settingsShell.classList.add("dream-skin-settings-shell");
+    if (isSettings) root.setAttribute(VIEW_ATTR, "settings");
+    else root.removeAttribute(VIEW_ATTR);
+
+    const shellMain = document.querySelector("main.main-surface") ||
+      settingsShell ||
+      document.querySelector(".main-surface") ||
+      document.querySelector("main");
     const homeIndicator = document.querySelector('[data-testid="home-icon"]');
     const home = homeIndicator?.closest('[role="main"]') ||
       [...document.querySelectorAll('[role="main"]')].find((candidate) =>
@@ -198,7 +232,24 @@
     if (home) home.classList.add("dream-skin-home");
 
     if (!shellMain || !document.body) return;
+    const libraryInput = [...document.querySelectorAll("input[placeholder]")].find((input) => {
+      const placeholder = (input.getAttribute("placeholder") || "").trim().toLowerCase();
+      return [
+        "搜索插件", "search plugins", "搜索技能", "search skills",
+      ].includes(placeholder);
+    }) || null;
+    const libraryPage = libraryInput?.closest('[class*="overflow-y-auto"]') || null;
+    const librarySearch = libraryInput?.closest(".sticky") || null;
+    for (const candidate of document.querySelectorAll(".dream-skin-library-page")) {
+      if (candidate !== libraryPage) candidate.classList.remove("dream-skin-library-page");
+    }
+    for (const candidate of document.querySelectorAll(".dream-skin-library-search")) {
+      if (candidate !== librarySearch) candidate.classList.remove("dream-skin-library-search");
+    }
+    if (libraryPage) libraryPage.classList.add("dream-skin-library-page");
+    if (librarySearch) librarySearch.classList.add("dream-skin-library-search");
     shellMain.classList.toggle("dream-skin-home-shell", Boolean(home));
+    shellMain.classList.toggle("dream-skin-library-shell", Boolean(libraryInput));
     let chrome = document.getElementById(CHROME_ID);
     if (!chrome || chrome.parentElement !== document.body) {
       chrome?.remove();
@@ -216,9 +267,9 @@
         <div class="dream-skin-orbit"></div>`;
       document.body.appendChild(chrome);
     }
-    chrome.querySelector(".dream-skin-brand b").textContent = THEME.name || "Codex Dream Skin";
-    chrome.querySelector(".dream-skin-brand small").textContent = THEME.brandSubtitle || "CODEX DREAM SKIN";
-    chrome.querySelector(".dream-skin-status span").textContent = THEME.statusText || "DREAM SKIN ONLINE";
+    chrome.querySelector(".dream-skin-brand b").textContent = THEME.name || "Codex 皮肤管理器";
+    chrome.querySelector(".dream-skin-brand small").textContent = THEME.brandSubtitle || "CODEX SKIN MANAGER";
+    chrome.querySelector(".dream-skin-status span").textContent = THEME.statusText || "SKIN ACTIVE";
     chrome.querySelector(".dream-skin-quote").textContent = THEME.quote || "MAKE SOMETHING WONDERFUL";
     const shellBox = shellMain.getBoundingClientRect();
     chrome.style.left = `${Math.round(shellBox.left)}px`;
@@ -226,6 +277,8 @@
     chrome.style.width = `${Math.round(shellBox.width)}px`;
     chrome.style.height = `${Math.round(shellBox.height)}px`;
     chrome.classList.toggle("dream-skin-home-shell", Boolean(home));
+    chrome.classList.toggle("dream-skin-library-shell", Boolean(libraryInput));
+    chrome.classList.toggle("dream-skin-settings-chrome", isSettings);
     chrome.dataset.dreamShell = shell;
   };
 
@@ -233,10 +286,18 @@
     window[DISABLED_KEY] = true;
     document.documentElement?.classList.remove("codex-dream-skin");
     document.documentElement?.removeAttribute(SHELL_ATTR);
+    document.documentElement?.removeAttribute(THEME_ATTR);
+    document.documentElement?.removeAttribute(VIEW_ATTR);
     document.documentElement?.style.removeProperty("--dream-skin-art");
     for (const name of THEME_VARIABLES) document.documentElement?.style.removeProperty(name);
     document.querySelectorAll(".dream-skin-home").forEach((node) => node.classList.remove("dream-skin-home"));
     document.querySelectorAll(".dream-skin-home-shell").forEach((node) => node.classList.remove("dream-skin-home-shell"));
+    document.querySelectorAll(".dream-skin-library-page").forEach((node) => node.classList.remove("dream-skin-library-page"));
+    document.querySelectorAll(".dream-skin-library-search").forEach((node) => node.classList.remove("dream-skin-library-search"));
+    document.querySelectorAll(".dream-skin-library-shell").forEach((node) => node.classList.remove("dream-skin-library-shell"));
+    document.querySelectorAll(".dream-skin-settings-sidebar").forEach((node) => node.classList.remove("dream-skin-settings-sidebar"));
+    document.querySelectorAll(".dream-skin-settings-shell").forEach((node) => node.classList.remove("dream-skin-settings-shell"));
+    document.querySelectorAll(".dream-skin-settings-chrome").forEach((node) => node.classList.remove("dream-skin-settings-chrome"));
     document.getElementById(STYLE_ID)?.remove();
     document.getElementById(CHROME_ID)?.remove();
     const state = window[STATE_KEY];

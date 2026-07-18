@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 2,
+  "id": "black-gold-stage",
+  "name": "KUN 黑金舞台",
+  "description": "黑金演出舞台与真实人物肖像，沉稳、精致且富有聚光感。",
+  "category": "人物",
+  "style": "black-gold-stage",
+  "avatarOverlay": "show",
+  "appearance": "dark",
+  "brandSubtitle": "KUN STAGE",
+  "tagline": "与 KUN 同频，让代码点亮舞台。",
+  "projectPrefix": "选择项目 · ",
+  "projectLabel": "☆  选择项目",
+  "statusText": "KUN STAGE ONLINE",
+  "quote": "BE BETTER · BE KUN",
+  "image": "background.png",
+  "preview": "preview.png",
+  "identityReference": "identity-reference.png",
+  "colors": {
+    "background": "#090a09",
+    "panel": "#111311",
+    "panelAlt": "#1a1815",
+    "accent": "#d6bd84",
+    "accentAlt": "#f0dfb5",
+    "secondary": "#8f8066",
+    "highlight": "#8e4c42",
+    "text": "#f3eee2",
+    "muted": "#aaa18f",
+    "line": "rgba(214, 189, 132, .30)"
+  }
+}

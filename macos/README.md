@@ -1,4 +1,4 @@
-# Codex Dream Skin Studio
+# Codex 皮肤管理器（macOS）
 
 Unofficial macOS theme studio for the **official Codex Desktop** app.
 
@@ -23,8 +23,8 @@ This project injects through **local loopback CDP**. It does **not** modify the 
 # 2) Install to the stable path and create Desktop launchers
 ./scripts/install-dream-skin-macos.sh --no-launch
 
-# 3) Customize with your image (Finder picker if you omit flags)
-~/.codex/codex-dream-skin-studio/scripts/customize-theme-macos.sh
+# 3) Open the graphical manager to create, import, or switch themes
+open "$HOME/Applications/Codex 皮肤管理器.app"
 
 # 4) Start / re-apply, verify, or restore via Desktop:
 #    Codex Dream Skin.command
@@ -55,6 +55,16 @@ To build the “double-click install” folder layout for non-git users:
 
 That ZIP contains a visible installer plus a hidden `.codex-dream-skin-studio` engine. Do not ship only CSS/images.
 
+## One-click DMG
+
+Build a macOS disk image containing the graphical one-click installer:
+
+```bash
+./scripts/build-installer-dmg-macos.sh "$HOME/Desktop/Codex 皮肤管理器 1.5.0.dmg"
+```
+
+Open the DMG, launch `安装 Codex 皮肤管理器.app`, and click `一键安装`. It deploys the engine under `~/.codex`, installs the prebuilt manager under `~/Applications`, creates a Desktop entry, and opens the manager.
+
 ## How it works (security boundary)
 
 1. Discover `com.openai.codex` and validate signature / Team ID / arch / bundled Node.
@@ -66,13 +76,25 @@ That ZIP contains a visible installer plus a hidden `.codex-dream-skin-studio` e
 
 CDP is powerful and unauthenticated on loopback. Prefer Restore when you are done theming.
 
+## Create and import themes
+
+The manager provides a native creation sheet with image selection, horizontal crop focus, metadata, appearance, and palette controls. It writes `2400x800` `background.png`, `1200x400` `preview.png`, and schema 2 `theme.json`.
+
+The installer also deploys the bundled `codex-skin-theme-creator` Skill. The manager's Integration page shows whether it is current and can reinstall it. Themes created by the Skill enter the same user library and are detected while the manager is open.
+
+The import action validates the three-file package before copying it into the theme library. See `../docs/theme-format.md` for exact fields and limits.
+
 ## Image guidelines
 
 - PNG / JPEG / HEIC / TIFF / WebP (macOS readable)
 - Source ≤ 50 MB; prepared file ≤ 16 MB
-- Wide images work best (width ≥ 2000 px recommended)
+- Any macOS-readable aspect ratio is accepted; Studio center-crops it to a `2400x800` 3:1 `background.png`
+- Studio also creates the required `1200x400` `preview.png`
 - Keep the left side relatively calm for native home titles
+- The same image is reused for home, task, plugin, and skill pages
 - Image is banner + background only — never a full-window fake UI overlay
+
+See `../docs/theme-format.md` for the schema 2 theme-pack contract.
 
 CLI example:
 
@@ -114,7 +136,7 @@ Thanks to **[passion8.cc](https://passion8.cc/register?aff=TuPe)** for sponsorin
 
 - Not an OpenAI product and not a fork of Codex source
 - Not a way to patch or rebrand the official binary
-- Not a Windows build (see `../windows/`)
+- This folder is the macOS build; the Windows installer and theme manager live under `../windows/`
 - Not an API proxy: theming does not change model providers or API keys
 
 If you use a third-party API relay, configure it separately — keep theme install and API config as two explicit steps.

@@ -81,17 +81,33 @@ echo "换一张图… | bash=\"$CUSTOMIZE\" terminal=false refresh=true"
 # Dynamic: saved theme packs
 echo "已保存的主题"
 theme_count=0
+
+print_theme_entry() {
+  local dir="$1"
+  local tid tname mark
+  [ -d "$dir" ] || return 0
+  [ -f "$dir/theme.json" ] || return 0
+  tid="$(/usr/bin/basename "$dir")"
+  tname="$(/usr/bin/python3 -c 'import json,sys;print(json.load(open(sys.argv[1])).get("name") or sys.argv[2])' "$dir/theme.json" "$tid" 2>/dev/null)"
+  [ -n "$tname" ] || tname="$tid"
+  mark=""
+  [ "$tname" = "$THEME_LINE" ] && mark=" ✓"
+  echo "-- $tname$mark | bash=\"$SWITCH\" param1=\"--id\" param2=\"$tid\" terminal=false refresh=true"
+  theme_count=$((theme_count + 1))
+}
+
 if [ -d "$THEMES_ROOT" ]; then
+  # Keep the built-in library aligned with Theme Studio; custom packs follow.
+  for tid in codex-default salary-cat-office miku-dream-skin nailong-sunshine cyrene-star-rail blue-archive-ensemble cartethyia-wuthering-waves furina-genshin firefly-star-rail saber-fate asuka-eva rem-rezero red-horizon black-gold-stage; do
+    print_theme_entry "$THEMES_ROOT/$tid"
+  done
   for dir in "$THEMES_ROOT"/*; do
     [ -d "$dir" ] || continue
-    [ -f "$dir/theme.json" ] || continue
     tid="$(/usr/bin/basename "$dir")"
-    tname="$(/usr/bin/python3 -c 'import json,sys;print(json.load(open(sys.argv[1])).get("name") or sys.argv[2])' "$dir/theme.json" "$tid" 2>/dev/null)"
-    [ -n "$tname" ] || tname="$tid"
-    mark=""
-    [ "$tname" = "$THEME_LINE" ] && mark=" ✓"
-    echo "-- $tname$mark | bash=\"$SWITCH\" param1=\"--id\" param2=\"$tid\" terminal=false refresh=true"
-    theme_count=$((theme_count + 1))
+    case "$tid" in
+      codex-default|salary-cat-office|miku-dream-skin|nailong-sunshine|cyrene-star-rail|blue-archive-ensemble|cartethyia-wuthering-waves|furina-genshin|firefly-star-rail|saber-fate|asuka-eva|rem-rezero|red-horizon|black-gold-stage) continue ;;
+    esac
+    print_theme_entry "$dir"
   done
 fi
 if [ "$theme_count" -eq 0 ]; then

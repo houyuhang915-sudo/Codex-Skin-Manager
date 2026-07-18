@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 2,
+  "id": "rem-rezero",
+  "name": "蕾姆 · 冰蓝夜庭",
+  "description": "蕾姆、月夜宅邸与冰晶蓝玫瑰构成的静谧夜庭主题。",
+  "category": "动漫",
+  "style": "rem-rezero",
+  "avatarOverlay": "show",
+  "appearance": "dark",
+  "brandSubtitle": "REM CRYSTAL NIGHT",
+  "tagline": "让月色与蓝玫瑰陪你理清思路，安静完成每一项任务。",
+  "projectPrefix": "夜庭任务 · ",
+  "projectLabel": "选择夜庭任务",
+  "statusText": "CRYSTAL NIGHT ONLINE",
+  "quote": "月色如蓝 · 专注如初",
+  "image": "background.png",
+  "preview": "preview.png",
+  "colors": {
+    "background": "#07132d",
+    "panel": "#101c36",
+    "panelAlt": "#17294a",
+    "accent": "#5ca8ef",
+    "accentAlt": "#93c9ff",
+    "secondary": "#d7b779",
+    "highlight": "#6d76d8",
+    "text": "#f4f8ff",
+    "muted": "#a9bad3",
+    "line": "rgba(92, 168, 239, .30)"
+  }
+}

@@ -1,4 +1,4 @@
-$script:DreamSkinUtf8NoBom = [System.Text.UTF8Encoding]::new($false, $true)
+﻿$script:DreamSkinUtf8NoBom = [System.Text.UTF8Encoding]::new($false, $true)
 
 function ConvertFrom-DreamSkinUtf8Bytes {
   param(
@@ -100,6 +100,8 @@ function Write-DreamSkinBytesAtomically {
   }
   $fileName = [System.IO.Path]::GetFileName($fullPath)
   $temporary = Join-Path $directory ".$fileName.$PID.$([guid]::NewGuid().ToString('N')).tmp"
+  $replacementBackup = Join-Path $directory ".$fileName.$PID.$([guid]::NewGuid().ToString('N')).replace-backup"
+  $replaceSucceeded = $false
 
   try {
     [System.IO.File]::WriteAllBytes($temporary, $Bytes)
@@ -107,12 +109,17 @@ function Write-DreamSkinBytesAtomically {
       Assert-DreamSkinFileUnchanged -Path $fullPath -ExpectedBytes $ExpectedBytes
     }
     if ([System.IO.File]::Exists($fullPath)) {
-      [System.IO.File]::Replace($temporary, $fullPath, $null)
+      [System.IO.File]::Replace($temporary, $fullPath, $replacementBackup)
+      $replaceSucceeded = $true
+      [System.IO.File]::Delete($replacementBackup)
     } else {
       [System.IO.File]::Move($temporary, $fullPath)
     }
   } finally {
     if ([System.IO.File]::Exists($temporary)) { [System.IO.File]::Delete($temporary) }
+    if ($replaceSucceeded -and [System.IO.File]::Exists($replacementBackup)) {
+      [System.IO.File]::Delete($replacementBackup)
+    }
   }
 }
 
@@ -167,7 +174,7 @@ function Assert-DreamSkinTomlLineEditingSafe {
   if ($Content.Contains('"""') -or $Content.Contains("'''")) {
     throw 'Refusing to rewrite TOML containing multiline strings; use single-line values before installing Dream Skin.'
   }
-  foreach ($match in [regex]::Matches($Content, '(?m)^[^\r\n]*=[\t ]*\[[^\r\n]*$')) {
+  foreach ($match in [regex]::Matches($Content, '(?m)^[^\r\n]*=[\t ]*\[[^\r\n]*\r?$')) {
     if ((Get-DreamSkinTomlArrayBracketBalance -Line $match.Value) -ne 0) {
       throw 'Refusing to rewrite TOML containing multiline arrays; use single-line arrays before installing Dream Skin.'
     }
@@ -368,6 +375,9 @@ function Restore-DreamSkinBaseTheme {
   } else {
     $currentContent = $currentContent.Substring(0, $currentDesktop.BodyStart) + $body +
       $currentContent.Substring($currentDesktop.BodyStart + $currentDesktop.BodyLength)
+  }
+  if ($currentContent.TrimEnd() -ceq $backupContent.TrimEnd()) {
+    $currentContent = $backupContent
   }
   Write-DreamSkinUtf8FileAtomically -Path $ConfigPath -Content $currentContent -ExpectedBytes $currentBytes
 }

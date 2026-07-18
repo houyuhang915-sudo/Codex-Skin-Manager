@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 2,
+  "id": "saber-fate",
+  "name": "Saber · 誓约胜利",
+  "description": "Saber、蓝花原野与晨光城堡构成的王道骑士主题。",
+  "category": "动漫",
+  "style": "saber-fate",
+  "avatarOverlay": "show",
+  "appearance": "light",
+  "brandSubtitle": "SABER OATH OF VICTORY",
+  "tagline": "以清醒的判断与坚定的誓约，完成眼前的每一战。",
+  "projectPrefix": "骑士誓约 · ",
+  "projectLabel": "选择骑士誓约",
+  "statusText": "EXCALIBUR ONLINE",
+  "quote": "剑锋所向 · 皆为答案",
+  "image": "background.png",
+  "preview": "preview.png",
+  "colors": {
+    "background": "#eef5fb",
+    "panel": "#ffffff",
+    "panelAlt": "#e8f0f8",
+    "accent": "#2c64b8",
+    "accentAlt": "#79a9e4",
+    "secondary": "#caa84b",
+    "highlight": "#4d6a91",
+    "text": "#203047",
+    "muted": "#68788a",
+    "line": "rgba(44, 100, 184, .24)"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 2,
+  "id": "asuka-eva",
+  "name": "明日香 · 红色黄昏",
+  "description": "明日香、二号机与第三新东京市夕照构成的红蓝机甲主题。",
+  "category": "动漫",
+  "style": "asuka-eva",
+  "avatarOverlay": "show",
+  "appearance": "dark",
+  "brandSubtitle": "ASUKA RED HORIZON",
+  "tagline": "保持锋芒，把复杂任务拆成下一次准确出击。",
+  "projectPrefix": "同步任务 · ",
+  "projectLabel": "选择同步任务",
+  "statusText": "UNIT 02 ONLINE",
+  "quote": "红色出击 · 精准完成",
+  "image": "background.png",
+  "preview": "preview.png",
+  "colors": {
+    "background": "#0c1428",
+    "panel": "#151d2d",
+    "panelAlt": "#231b26",
+    "accent": "#e74634",
+    "accentAlt": "#ff7a52",
+    "secondary": "#4ea3d8",
+    "highlight": "#8a2635",
+    "text": "#fff4ee",
+    "muted": "#b8aeb0",
+    "line": "rgba(231, 70, 52, .30)"
+  }
+}

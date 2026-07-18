@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 2,
+  "id": "salary-cat-office",
+  "name": "月薪喵打卡",
+  "description": "清爽明亮的办公主题，手绘布偶猫月薪喵陪你准时开工、专心写码。",
+  "category": "办公",
+  "style": "salary-cat-office",
+  "avatarOverlay": "show",
+  "appearance": "light",
+  "brandSubtitle": "SALARY CAT OFFICE",
+  "tagline": "准时打卡，专心写码，下班不加戏。",
+  "projectPrefix": "今日工位 · ",
+  "projectLabel": "选择今日项目",
+  "statusText": "SALARY CAT ON DUTY",
+  "quote": "准点开工 · 准点下班",
+  "image": "background.png",
+  "preview": "preview.png",
+  "colors": {
+    "background": "#f3faf7",
+    "panel": "#ffffff",
+    "panelAlt": "#edf6ff",
+    "accent": "#24a777",
+    "accentAlt": "#55bfa3",
+    "secondary": "#579bd7",
+    "highlight": "#f2c14e",
+    "text": "#24343e",
+    "muted": "#667680",
+    "line": "rgba(36, 167, 119, .24)"
+  }
+}

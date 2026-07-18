@@ -52,32 +52,46 @@ if (mode !== "custom") {
   throw new Error("Usage: write-theme.mjs custom [options] | reset-demo --output-dir <dir>");
 }
 
-const image = path.basename(valueFor("image", "background.jpg"));
-if (!/\.(?:png|jpe?g|webp)$/i.test(image)) throw new Error("image must be a PNG, JPEG, or WebP filename.");
+const image = path.basename(valueFor("image", "background.png"));
+if (image !== "background.png") throw new Error("schema 2 themes must use background.png.");
 const imagePath = path.join(outputDir, image);
 const imageStat = await fs.stat(imagePath);
 if (!imageStat.isFile() || imageStat.size < 1 || imageStat.size > 16 * 1024 * 1024) {
   throw new Error("The prepared theme image must be non-empty and no larger than 16 MB.");
 }
+const preview = "preview.png";
+const previewPath = path.join(outputDir, preview);
+const previewStat = await fs.stat(previewPath);
+if (!previewStat.isFile() || previewStat.size < 1 || previewStat.size > 8 * 1024 * 1024) {
+  throw new Error("schema 2 themes must include a non-empty preview.png no larger than 8 MB.");
+}
 
-const name = valueFor("name", "我的 Codex Dream Skin").trim().slice(0, 80);
+const name = valueFor("name", "我的 Codex 主题").trim().slice(0, 80);
 const tagline = valueFor("tagline", "把喜欢的画面变成可交互的 Codex 工作台。").trim().slice(0, 160);
 const quote = valueFor("quote", "MAKE SOMETHING WONDERFUL").trim().slice(0, 80);
+const style = valueFor("style", "custom").trim().toLowerCase();
+const appearance = valueFor("appearance", "auto").trim().toLowerCase();
+if (!/^[a-z0-9-]{1,80}$/.test(style)) throw new Error("style must contain only letters, numbers, and hyphens.");
+if (!["auto", "light", "dark"].includes(appearance)) throw new Error("appearance must be auto, light, or dark.");
 const accent = validateHex(valueFor("accent", "#7cff46"), "accent");
 const secondary = validateHex(valueFor("secondary", "#36d7e8"), "secondary");
 const highlight = validateHex(valueFor("highlight", "#642a8c"), "highlight");
 
 const custom = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   id: `custom-${Date.now()}`,
-  name: name || "我的 Codex Dream Skin",
-  brandSubtitle: "CODEX DREAM SKIN",
+  name: name || "我的 Codex 主题",
+  style,
+  avatarOverlay: "show",
+  appearance,
+  brandSubtitle: "CODEX SKIN MANAGER",
   tagline: tagline || "把喜欢的画面变成可交互的 Codex 工作台。",
   projectPrefix: "选择项目 · ",
   projectLabel: "◉  选择项目",
-  statusText: "DREAM SKIN ONLINE",
+  statusText: "SKIN ACTIVE",
   quote: quote || "MAKE SOMETHING WONDERFUL",
   image,
+  preview,
   colors: {
     background: "#071116",
     panel: "#0b1a20",

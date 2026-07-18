@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
   [int]$Port = 9335,
   [switch]$RestartExisting,
@@ -20,11 +20,32 @@ try {
   $currentCodex = Get-DreamSkinCodexInstall
   $codex = $currentCodex
   $StateRoot = Join-Path $env:LOCALAPPDATA 'CodexDreamSkin'
+  $ThemeDir = Join-Path $StateRoot 'theme'
   $StatePath = Join-Path $StateRoot 'state.json'
   $StdoutPath = Join-Path $StateRoot 'injector.log'
   $StderrPath = Join-Path $StateRoot 'injector-error.log'
   $VerifyPath = Join-Path $StateRoot 'verify.log'
   New-Item -ItemType Directory -Force -Path $StateRoot | Out-Null
+  if (-not (Test-Path -LiteralPath (Join-Path $ThemeDir 'theme.json'))) {
+    throw "No active Dream Skin theme is installed at $ThemeDir. Run install-dream-skin.ps1 first."
+  }
+  $SelectionPath = Join-Path $StateRoot 'selection.json'
+  $selectedThemeId = $null
+  if (Test-Path -LiteralPath $SelectionPath) {
+    try {
+      $selection = (Read-DreamSkinUtf8File -Path $SelectionPath) | ConvertFrom-Json -ErrorAction Stop
+      $selectedThemeId = [string]$selection.themeId
+      if ([string]$selection.themeId -ceq 'codex-default') {
+        if ((Get-DreamSkinCodexProcesses -Codex $currentCodex).Count -eq 0) {
+          Start-Process -FilePath $currentCodex.Executable | Out-Null
+        }
+        Write-Host 'Codex 当前使用原版外观。'
+        exit 0
+      }
+    } catch {
+      throw "Dream Skin selection is unreadable; it was preserved for inspection: $SelectionPath"
+    }
+  }
 
   $previousState = Read-DreamSkinState -Path $StatePath
   if (-not $PortExplicit -and $null -ne $previousState -and $previousState.port) {
@@ -85,7 +106,7 @@ try {
       $restartAuthorized = Confirm-DreamSkinRestart -Message 'Codex must restart once to enable Dream Skin. Unsaved input may be lost. Restart now?'
       if (-not $restartAuthorized) {
         Write-Host 'Dream Skin launch was cancelled; Codex was not changed.'
-        exit 0
+        exit 3
       }
     }
     if (-not $restartAuthorized) {
@@ -140,6 +161,32 @@ try {
     throw $launchError
   }
 
+  $canReuseInjector = -not $ForegroundInjector -and
+    $null -ne $previousState -and
+    (Test-DreamSkinRecordedInjector -State $previousState) -and
+    (Test-DreamSkinPathEqual -Left "$($previousState.injectorPath)" -Right $Injector) -and
+    "$($previousState.browserId)" -ceq $cdpIdentity.BrowserId
+  if ($canReuseInjector) {
+    $hotApplyOutput = @(& $node.Path $Injector --once --port $Port `
+      --browser-id $cdpIdentity.BrowserId --theme-dir $ThemeDir --timeout-ms 30000 2>&1)
+    $hotApplyExitCode = $LASTEXITCODE
+    Write-DreamSkinUtf8FileAtomically `
+      -Path $VerifyPath `
+      -Content (($hotApplyOutput -join "`r`n") + "`r`n")
+    if ($hotApplyExitCode -eq 0) {
+      $previousState | Add-Member -NotePropertyName selectedThemeId -NotePropertyValue $selectedThemeId -Force
+      $previousState | Add-Member -NotePropertyName themeDir -NotePropertyValue $ThemeDir -Force
+      $previousState | Add-Member `
+        -NotePropertyName updatedAt `
+        -NotePropertyValue (Get-Date).ToUniversalTime().ToString('o') `
+        -Force
+      Write-DreamSkinState -Path $StatePath -State $previousState
+      Write-Host "Codex 皮肤已热切换；现有监视器继续在本机端口 $Port 运行。"
+      exit 0
+    }
+    Write-Warning '实时热切换未通过验证，正在重建皮肤监视器。'
+  }
+
   try {
     $recordedInjectorStopped = Stop-DreamSkinRecordedInjector -State $previousState
     if (-not $recordedInjectorStopped) {
@@ -162,7 +209,7 @@ try {
     Remove-Item -LiteralPath $StatePath -Force -ErrorAction SilentlyContinue
     Exit-DreamSkinOperationLock -Mutex $operationLock
     $operationLock = $null
-    & $node.Path $Injector --watch --port $Port --browser-id $cdpIdentity.BrowserId
+    & $node.Path $Injector --watch --port $Port --browser-id $cdpIdentity.BrowserId --theme-dir $ThemeDir
     exit $LASTEXITCODE
   }
 
@@ -170,7 +217,7 @@ try {
   $daemon = $null
   try {
     $injectorArgs = @((ConvertTo-DreamSkinProcessArgument -Value $Injector), '--watch', '--port', "$Port",
-      '--browser-id', $cdpIdentity.BrowserId)
+      '--browser-id', $cdpIdentity.BrowserId, '--theme-dir', (ConvertTo-DreamSkinProcessArgument -Value $ThemeDir))
     $daemon = Start-Process -FilePath $node.Path -ArgumentList $injectorArgs -WindowStyle Hidden -PassThru `
       -RedirectStandardOutput $StdoutPath -RedirectStandardError $StderrPath
     Start-Sleep -Milliseconds 500
@@ -193,13 +240,15 @@ try {
       codexPackageFamilyName = $codex.PackageFamilyName
       codexVersion = $codex.Version
       browserId = $cdpIdentity.BrowserId
+      themeDir = $ThemeDir
+      selectedThemeId = $selectedThemeId
       profilePath = $ProfilePath
       createdAt = (Get-Date).ToUniversalTime().ToString('o')
     }
     Write-DreamSkinState -Path $StatePath -State $state
 
     $verifyOutput = @(& $node.Path $Injector --verify --port $Port --browser-id $cdpIdentity.BrowserId `
-      --timeout-ms 30000 2>&1)
+      --theme-dir $ThemeDir --timeout-ms 30000 2>&1)
     $verifyExitCode = $LASTEXITCODE
     Write-DreamSkinUtf8FileAtomically -Path $VerifyPath -Content (($verifyOutput -join "`r`n") + "`r`n")
     if ($verifyExitCode -ne 0) { throw "Dream Skin verification failed. See $VerifyPath" }
@@ -247,7 +296,8 @@ try {
     throw $startupError
   }
 
-  Write-Host "Codex Dream Skin is active on verified loopback port $Port."
+  Write-Host "Codex 皮肤管理器已在验证通过的本机端口 $Port 运行。"
+  exit 0
 } finally {
   if ($null -ne $operationLock) { Exit-DreamSkinOperationLock -Mutex $operationLock }
 }

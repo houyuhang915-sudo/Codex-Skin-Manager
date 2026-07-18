@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 2,
+  "id": "cartethyia-wuthering-waves",
+  "name": "卡提希娅 · 风栖海境",
+  "description": "卡提希娅置身海风、白羽与教堂花园的明亮幻想主题。",
+  "category": "角色",
+  "style": "cartethyia-wuthering-waves",
+  "avatarOverlay": "show",
+  "appearance": "light",
+  "brandSubtitle": "CARTETHYIA SEA BREEZE",
+  "tagline": "循着海风与白羽，让灵感抵达更远的地方。",
+  "projectPrefix": "海境坐标 · ",
+  "projectLabel": "选择海境坐标",
+  "statusText": "SEA BREEZE ONLINE",
+  "quote": "风与白羽 · 写向远方",
+  "image": "background.png",
+  "preview": "preview.png",
+  "colors": {
+    "background": "#f2fbff",
+    "panel": "#ffffff",
+    "panelAlt": "#eaf7fb",
+    "accent": "#2f9fc4",
+    "accentAlt": "#73c9da",
+    "secondary": "#d6b76e",
+    "highlight": "#526f9f",
+    "text": "#23354a",
+    "muted": "#667b8d",
+    "line": "rgba(47, 159, 196, .24)"
+  }
+}

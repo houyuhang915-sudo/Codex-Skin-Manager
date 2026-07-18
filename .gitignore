@@ -8,3 +8,7 @@ README.preview.html
 docs/readme-preview.html
 release/
 runtime/
+output/
+tmp/
+.codex/
+/dist/

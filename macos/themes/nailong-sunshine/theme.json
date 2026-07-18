@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 2,
+  "id": "nailong-sunshine",
+  "name": "奶龙晴空",
+  "description": "奶龙与明亮晴空组成的轻松创作主题，温暖、活泼又保持清晰可读。",
+  "category": "角色",
+  "style": "nailong-sunshine",
+  "avatarOverlay": "show",
+  "appearance": "light",
+  "brandSubtitle": "NAILONG SUNSHINE",
+  "tagline": "和奶龙一起，把今天的灵感写成快乐的代码。",
+  "projectPrefix": "今日冒险 · ",
+  "projectLabel": "选择今日冒险",
+  "statusText": "NAILONG ONLINE",
+  "quote": "开心开工 · 灵感不打烊",
+  "image": "background.png",
+  "preview": "preview.png",
+  "colors": {
+    "background": "#edfaff",
+    "panel": "#ffffff",
+    "panelAlt": "#f5fbef",
+    "accent": "#efa928",
+    "accentAlt": "#ffd45d",
+    "secondary": "#4aaed0",
+    "highlight": "#72b65a",
+    "text": "#263845",
+    "muted": "#687b85",
+    "line": "rgba(239, 169, 40, .28)"
+  }
+}

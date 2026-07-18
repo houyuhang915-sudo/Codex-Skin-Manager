@@ -68,9 +68,9 @@ fi
 ' "$STATE_PATH" "$PORT" "$THEME_DIR" "$PROJECT_ROOT"
 
 if [ "$REMOVED" = "true" ]; then
-  printf 'Codex Dream Skin paused (skin removed; Codex left running). Port %s may still be in debug mode.\n' "$PORT"
+  printf 'Codex 皮肤管理器已暂停（皮肤已移除，Codex 保持运行）。端口 %s 可能仍处于调试模式。\n' "$PORT"
 elif codex_is_running; then
-  printf 'Codex Dream Skin paused (injector stopped). Live remove skipped: CDP on port %s not verified.\n' "$PORT"
+  printf 'Codex 皮肤管理器已暂停（注入器已停止）。端口 %s 的 CDP 未通过验证，已跳过实时移除。\n' "$PORT"
 else
-  printf 'Codex Dream Skin paused (Codex is not running).\n'
+  printf 'Codex 皮肤管理器已暂停（Codex 当前未运行）。\n'
 fi

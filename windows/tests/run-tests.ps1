@@ -1,9 +1,31 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param()
 
 $ErrorActionPreference = 'Stop'
 $Root = Split-Path -Parent $PSScriptRoot
+$RepositoryRoot = Split-Path -Parent $Root
 . (Join-Path $Root 'scripts\common-windows.ps1')
+
+foreach ($scriptFile in @(Get-ChildItem -LiteralPath (Join-Path $Root 'scripts') -Filter '*.ps1' -File)) {
+  [void][scriptblock]::Create((Get-Content -LiteralPath $scriptFile.FullName -Raw -Encoding UTF8))
+}
+foreach ($scriptFile in @(Get-ChildItem -LiteralPath $Root -Filter '*.ps1' -File -Recurse)) {
+  $scriptBytes = [IO.File]::ReadAllBytes($scriptFile.FullName)
+  if ($scriptBytes.Length -lt 3 -or $scriptBytes[0] -ne 0xEF -or
+      $scriptBytes[1] -ne 0xBB -or $scriptBytes[2] -ne 0xBF) {
+    throw "Windows PowerShell 5.1 UTF-8 BOM is missing: $($scriptFile.FullName)"
+  }
+}
+$sharedSkillRoot = Join-Path $RepositoryRoot 'skill\codex-skin-theme-creator'
+$sharedSkillPowerShell = Join-Path $sharedSkillRoot 'scripts\create-theme-windows.ps1'
+[void][scriptblock]::Create(
+  (Get-Content -LiteralPath $sharedSkillPowerShell -Raw -Encoding UTF8)
+)
+$sharedSkillBytes = [IO.File]::ReadAllBytes($sharedSkillPowerShell)
+if ($sharedSkillBytes.Length -lt 3 -or $sharedSkillBytes[0] -ne 0xEF -or
+    $sharedSkillBytes[1] -ne 0xBB -or $sharedSkillBytes[2] -ne 0xBF) {
+  throw 'The shared Windows theme creator Skill script is missing its UTF-8 BOM.'
+}
 
 $temporaryRoot = Join-Path ([System.IO.Path]::GetTempPath()) "codex-dream-skin-tests-$PID-$([guid]::NewGuid().ToString('N'))"
 New-Item -ItemType Directory -Path $temporaryRoot | Out-Null
@@ -312,10 +334,230 @@ try {
   $node = Get-DreamSkinNodeRuntime
   & $node.Path (Join-Path $Root 'scripts\injector.mjs') --self-test *> $null
   if ($LASTEXITCODE -ne 0) { throw 'Injector CDP self-test failed.' }
+  if ((Get-Content -LiteralPath (Join-Path $Root 'scripts\injector.mjs') -Raw) -notmatch 'markers\.library') {
+    throw 'Injector does not recognize the plugin and skill library shell.'
+  }
+  $injectorSource = Get-Content -LiteralPath (Join-Path $Root 'scripts\injector.mjs') -Raw
+  $rendererSource = Get-Content -LiteralPath (Join-Path $Root 'assets\renderer-inject.js') -Raw
+  if ($injectorSource -notmatch 'markers\.settings' -or
+      $rendererSource -notmatch 'dream-skin-settings-sidebar' -or
+      $rendererSource -notmatch 'dream-skin-settings-shell') {
+    throw 'The renderer or injector does not recognize the settings shell.'
+  }
   & $node.Path (Join-Path $Root 'scripts\injector.mjs') --check-payload *> $null
   if ($LASTEXITCODE -ne 0) { throw 'Injector self-test failed.' }
 
-  Write-Host 'PASS: config transactions, restore scoping, state safety, argument quoting, and loopback CDP validation.'
+  $themeIds = @(
+    'codex-default',
+    'salary-cat-office',
+    'miku-dream-skin',
+    'nailong-sunshine',
+    'cyrene-star-rail',
+    'blue-archive-ensemble',
+    'cartethyia-wuthering-waves',
+    'furina-genshin',
+    'firefly-star-rail',
+    'saber-fate',
+    'asuka-eva',
+    'rem-rezero',
+    'red-horizon',
+    'black-gold-stage'
+  )
+  foreach ($themeId in $themeIds) {
+    $themeRoot = Join-Path $Root "themes\$themeId"
+    $manifestPath = Join-Path $themeRoot 'theme.json'
+    foreach ($file in @('background.png', 'preview.png', 'theme.json')) {
+      if (-not (Test-Path -LiteralPath (Join-Path $themeRoot $file))) {
+        throw "Theme $themeId is missing $file."
+      }
+    }
+    $manifest = Get-Content -LiteralPath $manifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    if ($manifest.schemaVersion -ne 2 -or $manifest.id -cne $themeId -or
+      $manifest.image -cne 'background.png' -or $manifest.preview -cne 'preview.png' -or
+      [string]::IsNullOrWhiteSpace([string]$manifest.style) -or
+      @('auto', 'light', 'dark') -cnotcontains [string]$manifest.appearance -or
+      $manifest.avatarOverlay -cne 'show' -or $null -ne $manifest.taskImage) {
+      throw "Theme $themeId does not follow the schema 2 single-image format."
+    }
+    if ($themeId -ne 'codex-default') {
+      $payloadText = & $node.Path (Join-Path $Root 'scripts\injector.mjs') --check-payload --theme-dir $themeRoot
+      if ($LASTEXITCODE -ne 0) { throw "Theme payload validation failed: $themeId" }
+      $payload = $payloadText | ConvertFrom-Json
+      if ($payload.avatarOverlay -cne 'show') {
+        throw "Theme payload can hide the pet overlay: $themeId"
+      }
+    }
+  }
+  $cssSource = Get-Content -LiteralPath (Join-Path $Root 'assets\dream-skin.css') -Raw -Encoding UTF8
+  if ($cssSource -notmatch 'data-dream-view="settings"' -or
+      $cssSource -notmatch '--color-background-panel' -or
+      $cssSource -notmatch 'dream-skin-settings-sidebar' -or
+      $cssSource -notmatch 'dream-skin-settings-shell.*rounded-2xl') {
+    throw 'The settings shell is missing theme-aware panel and control styles.'
+  }
+  if ($cssSource -notmatch 'red-horizon.*app-shell-main-content-top-fade' -or
+    $cssSource -notmatch 'red-horizon.*data-sonner-toaster' -or
+    $cssSource -notmatch 'blue-archive-ensemble.*app-shell-main-content-top-fade' -or
+    $cssSource -notmatch 'blue-archive-ensemble.*data-sonner-toaster') {
+    throw 'A built-in light-shell theme is missing module overrides.'
+  }
+  foreach ($themeStyle in @(
+    'cartethyia-wuthering-waves',
+    'furina-genshin',
+    'firefly-star-rail',
+    'saber-fate',
+    'asuka-eva',
+    'rem-rezero'
+  )) {
+    if ($cssSource -notmatch [regex]::Escape($themeStyle)) {
+      throw "Character theme $themeStyle is missing module overrides."
+    }
+  }
+  if ($cssSource -notmatch 'Character scene collection' -or
+    $cssSource -notmatch '\) main\.main-surface \.app-shell-main-content-top-fade' -or
+    $cssSource -notmatch '\) \[data-sonner-toaster\] \[data-sonner-toast\]') {
+    throw 'The character theme collection is missing shared module overrides.'
+  }
+  if ($cssSource -match '--dream-skin-character-task-focus' -or
+    $cssSource -match 'main\.main-surface:not\(\.dream-skin-home-shell\) \.thread-scroll-container') {
+    throw 'A character theme has a task-only focus or reading-wash override.'
+  }
+  $installerSource = Get-Content -LiteralPath (Join-Path $Root 'installer\CodexDreamSkin.nsi') -Raw -Encoding UTF8
+  if ($installerSource -notmatch 'PRODUCT_NAME "Codex 皮肤管理器"' -or
+    $installerSource -notmatch 'PRODUCT_VERSION "1\.5\.0"' -or
+    $installerSource -notmatch 'Codex-Skin-Manager-Setup-\$\{PRODUCT_VERSION\}\.exe' -or
+    $installerSource -notmatch 'engine-\$\{PRODUCT_VERSION\}') {
+    throw 'The Windows product name or release filename is stale.'
+  }
+  if ($installerSource -match '-PromptCloseCodex' -or
+      $installerSource -notmatch 'install-error\.log' -or
+      $installerSource -notmatch 'wscript\.exe.*launch-theme-manager\.vbs' -or
+      $installerSource -notmatch 'skill\\codex-skin-theme-creator') {
+    throw 'The Windows installer still requests a Codex shutdown or omits its detailed error log.'
+  }
+  $installScriptSource = Get-Content `
+    -LiteralPath (Join-Path $Root 'scripts\install-dream-skin.ps1') -Raw -Encoding UTF8
+  if ($installScriptSource -match 'PromptCloseCodex' -or
+      $installScriptSource -match 'Stop-DreamSkinCodex.*-AllowForce' -or
+      $installScriptSource -notmatch 'Codex 保持运行' -or
+      $installScriptSource -notmatch 'configInstalled' -or
+      $installScriptSource -notmatch 'selection\.json' -or
+      $installScriptSource -notmatch 'install-error\.log' -or
+      $installScriptSource -notmatch 'Install-DreamSkinThemeSkill') {
+    throw 'The install script is missing live-install retries, keep-running behavior, or persistent error logging.'
+  }
+  $managerSource = Get-Content `
+    -LiteralPath (Join-Path $Root 'scripts\theme-manager.ps1') -Raw -Encoding UTF8
+  $switchSource = Get-Content `
+    -LiteralPath (Join-Path $Root 'scripts\switch-theme.ps1') -Raw -Encoding UTF8
+  $pauseSource = Get-Content `
+    -LiteralPath (Join-Path $Root 'scripts\pause-dream-skin.ps1') -Raw -Encoding UTF8
+  $startSource = Get-Content `
+    -LiteralPath (Join-Path $Root 'scripts\start-dream-skin.ps1') -Raw -Encoding UTF8
+  $commonSource = Get-Content `
+    -LiteralPath (Join-Path $Root 'scripts\common-windows.ps1') -Raw -Encoding UTF8
+  $injectorSource = Get-Content `
+    -LiteralPath (Join-Path $Root 'scripts\injector.mjs') -Raw -Encoding UTF8
+  if ($managerSource -notmatch 'CodexDreamSkin\\themes' -or
+      $switchSource -notmatch 'CodexDreamSkin\\themes') {
+    throw 'The manager and switcher do not share the persistent user theme library.'
+  }
+  if ($managerSource -notmatch 'FlowLayoutPanel' -or
+      $managerSource -notmatch 'CreateNoWindow' -or
+      $managerSource -notmatch 'EncodedCommand' -or
+      $managerSource -notmatch 'TableLayoutPanel' -or
+      $managerSource -notmatch 'activeThemePanel' -or
+      $managerSource -notmatch 'integrationPanel' -or
+      $managerSource -notmatch 'runtimePanel' -or
+      $managerSource -notmatch 'New-ThemeActionCard' -or
+      $managerSource -notmatch 'Get-ManagerRuntimeSnapshot' -or
+      $managerSource -notmatch 'Get-DreamSkinVerifiedCdpIdentity' -or
+      $managerSource -notmatch 'Update-ThemeSkillState' -or
+      $managerSource -notmatch 'Get-ThemeLibraryFingerprint' -or
+      $managerSource -notmatch '-OutputFormat Text' -or
+      $managerSource -notmatch '深色侧栏|SidebarColor' -or
+      $managerSource -match 'System\.Windows\.Forms\.ListView') {
+    throw 'The Windows manager is missing the card library or hidden asynchronous switching.'
+  }
+  if ($switchSource -notmatch 'selection\.json' -or
+      $switchSource -notmatch 'pause-dream-skin\.ps1' -or
+      $pauseSource -notmatch '--remove' -or
+      $pauseSource -notmatch "session = 'paused'" -or
+      $startSource -notmatch 'selection\.json' -or
+      $startSource -notmatch "themeId -ceq 'codex-default'") {
+    throw 'The original-theme pause state or persistent theme selection workflow is incomplete.'
+  }
+  if ($managerSource -match 'previousThemeId' -or
+      $switchSource -match 'previousSelectionBytes' -or
+      $startSource -notmatch 'Test-DreamSkinRecordedInjector' -or
+      $startSource -notmatch '--once' -or
+      $commonSource -notmatch 'function Test-DreamSkinRecordedInjector' -or
+      $commonSource -notmatch 'AddSeconds\(10\)' -or
+      $injectorSource -notmatch 'getThemeRevision' -or
+      $injectorSource -notmatch 'closeAndWait' -or
+      $injectorSource -notmatch 'reloaded theme') {
+    throw 'The hot-switch workflow can still roll back selection or restart the injector unnecessarily.'
+  }
+  foreach ($launcherName in @('launch-theme-manager.vbs', 'launch-dream-skin.vbs', 'launch-restore.vbs')) {
+    $launcherSource = Get-Content `
+      -LiteralPath (Join-Path $Root "scripts\$launcherName") -Raw -Encoding ASCII
+    if ($launcherSource -notmatch '-WindowStyle Hidden' -or
+        $launcherSource -notmatch 'shell\.Run\(command, 0, True\)') {
+      throw "Hidden launcher does not wait without showing a console: $launcherName"
+    }
+  }
+  if ($injectorSource -notmatch 'process\.exit\(process\.exitCode') {
+    throw 'One-shot injector modes do not terminate explicitly.'
+  }
+  foreach ($required in @(
+    'scripts\pause-dream-skin.ps1',
+    'scripts\switch-theme.ps1',
+    'scripts\theme-manager.ps1',
+    'scripts\theme-package.ps1',
+    'scripts\theme-skill.ps1',
+    'scripts\launch-theme-manager.vbs',
+    'scripts\launch-dream-skin.vbs',
+    'scripts\launch-restore.vbs',
+    'installer\CodexDreamSkin.nsi',
+    'assets\DreamSkinAppIcon.ico'
+  )) {
+    if (-not (Test-Path -LiteralPath (Join-Path $Root $required))) {
+      throw "Windows package is missing $required."
+    }
+  }
+  Add-Type -AssemblyName System.Drawing
+  . (Join-Path $Root 'scripts\theme-package.ps1')
+  $validatedTheme = Assert-DreamSkinThemePackage -Path (Join-Path $Root 'themes\rem-rezero')
+  if ($validatedTheme.Manifest.id -cne 'rem-rezero') {
+    throw 'The strict theme package validator rejected the Rem theme.'
+  }
+  foreach ($missingField in @('style', 'appearance')) {
+    $invalidTheme = Join-Path $temporaryRoot "invalid-theme-$missingField"
+    Copy-Item -LiteralPath (Join-Path $Root 'themes\rem-rezero') `
+      -Destination $invalidTheme -Recurse
+    $invalidManifestPath = Join-Path $invalidTheme 'theme.json'
+    $invalidManifest = Get-Content -LiteralPath $invalidManifestPath -Raw -Encoding UTF8 |
+      ConvertFrom-Json
+    $invalidManifest.PSObject.Properties.Remove($missingField)
+    Write-DreamSkinUtf8FileAtomically `
+      -Path $invalidManifestPath `
+      -Content ($invalidManifest | ConvertTo-Json -Depth 8)
+    $invalidRejected = $false
+    try {
+      Assert-DreamSkinThemePackage -Path $invalidTheme | Out-Null
+    } catch {
+      $invalidRejected = $true
+    }
+    if (-not $invalidRejected) {
+      throw "The strict theme package validator accepted a package without $missingField."
+    }
+  }
+  if ($managerSource -notmatch 'Show-ThemeCreator' -or
+      $managerSource -notmatch 'Assert-DreamSkinThemePackage') {
+    throw 'The Windows manager is missing theme creation or strict import.'
+  }
+
+  Write-Host 'PASS: config transactions, restore scoping, state safety, theme payloads, argument quoting, and loopback CDP validation.'
 } finally {
   Remove-Item -LiteralPath $temporaryRoot -Recurse -Force -ErrorAction SilentlyContinue
 }

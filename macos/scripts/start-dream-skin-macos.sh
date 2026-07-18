@@ -8,7 +8,7 @@ record_start_error() {
   local line="$2"
   ensure_state_root
   printf '%s exit=%s line=%s\n' "$(/bin/date -u '+%Y-%m-%dT%H:%M:%SZ')" "$code" "$line" >> "$START_ERROR_LOG"
-  printf 'Codex Dream Skin Studio: start failed at line %s (exit %s). See %s\n' "$line" "$code" "$START_ERROR_LOG" >&2
+  printf 'Codex 皮肤管理器：启动在第 %s 行失败（退出码 %s），日志：%s\n' "$line" "$code" "$START_ERROR_LOG" >&2
 }
 trap 'code=$?; record_start_error "$code" "$LINENO"' ERR
 
@@ -43,7 +43,7 @@ if verified_cdp_endpoint "$PORT"; then DEBUG_READY="true"; fi
 
 if codex_is_running && [ "$DEBUG_READY" = "false" ]; then
   if [ "$PROMPT_RESTART" = "true" ] && [ "$RESTART_EXISTING" = "false" ]; then
-    /usr/bin/osascript -e 'display dialog "Codex 需要重启一次才能启用 Dream Skin。" buttons {"取消", "重启并应用"} default button "重启并应用" with title "Codex Dream Skin Studio"' >/dev/null \
+    /usr/bin/osascript -e 'display dialog "Codex 需要重启一次才能启用皮肤。" buttons {"取消", "重启并应用"} default button "重启并应用" with title "Codex 皮肤管理器"' >/dev/null \
       || fail "Theme launch was cancelled."
     RESTART_EXISTING="true"
   fi
@@ -100,7 +100,7 @@ fi
 if [ "$verify_code" -ne 0 ]; then
   # If CSS markers are present, treat as soft success (do not kill injector).
   if /usr/bin/grep -q '"installed": true' /tmp/dream-skin-verify.$$.json 2>/dev/null; then
-    printf 'Codex Dream Skin Studio %s is active (soft verify) on port %s.\n' "$SKIN_VERSION" "$PORT"
+    printf 'Codex 皮肤管理器 %s 已在端口 %s 运行（宽松验证）。\n' "$SKIN_VERSION" "$PORT"
     /bin/rm -f /tmp/dream-skin-verify.$$.json
     exit 0
   fi
@@ -110,4 +110,4 @@ if [ "$verify_code" -ne 0 ]; then
 fi
 /bin/rm -f /tmp/dream-skin-verify.$$.json
 
-printf 'Codex Dream Skin Studio %s is active on loopback port %s.\n' "$SKIN_VERSION" "$PORT"
+printf 'Codex 皮肤管理器 %s 已在本机端口 %s 运行。\n' "$SKIN_VERSION" "$PORT"

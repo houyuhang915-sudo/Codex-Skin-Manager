@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
   [int]$Port = 9335,
   [string]$ScreenshotPath
@@ -13,6 +13,7 @@ $operationLock = Enter-DreamSkinOperationLock
 $verifyExitCode = 1
 try {
   $StatePath = Join-Path $env:LOCALAPPDATA 'CodexDreamSkin\state.json'
+  $ThemeDir = Join-Path $env:LOCALAPPDATA 'CodexDreamSkin\theme'
   $state = Read-DreamSkinState -Path $StatePath
   if (-not $PortExplicit -and $null -ne $state -and $state.port) { $Port = [int]$state.port }
   Assert-DreamSkinPort -Port $Port
@@ -39,7 +40,7 @@ try {
   }
 
   $arguments = @($injector, '--verify', '--port', "$Port", '--browser-id', $cdpIdentity.BrowserId,
-    '--timeout-ms', '30000')
+    '--theme-dir', $ThemeDir, '--timeout-ms', '30000')
   if ($ScreenshotPath) { $arguments += @('--screenshot', $ScreenshotPath) }
   & $node.Path @arguments
   $verifyExitCode = $LASTEXITCODE

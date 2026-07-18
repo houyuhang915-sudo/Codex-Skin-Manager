@@ -42,8 +42,12 @@ except Exception:
 PY
 }
 
-# Codex process: cheap name match only
-if /usr/bin/pgrep -x ChatGPT >/dev/null 2>&1; then
+# Codex process: match the signed app's main executable path. `pgrep -x` is
+# unreliable here because newer macOS builds expose the full executable path.
+if /bin/ps -axo command= | /usr/bin/awk '
+  /\/(ChatGPT|Codex)\.app\/Contents\/MacOS\/(ChatGPT|Codex)( |$)/ { found=1 }
+  END { exit found ? 0 : 1 }
+'; then
   CODEX_RUNNING="true"
 fi
 
@@ -68,6 +72,7 @@ if [ -f "$THEME_DIR/theme.json" ]; then
   THEME_NAME="$(read_json_field "$THEME_DIR/theme.json" name)"
   [ -n "$THEME_NAME" ] || THEME_NAME="$(read_json_field "$THEME_DIR/theme.json" id)"
 fi
+[ "$SESSION" = "paused" ] && THEME_NAME="Codex 默认原版"
 
 if [ "$DEEP" = "true" ]; then
   if /usr/bin/curl --noproxy '*' --silent --fail --max-time 1 "http://127.0.0.1:${PORT}/json/version" >/dev/null 2>&1; then
