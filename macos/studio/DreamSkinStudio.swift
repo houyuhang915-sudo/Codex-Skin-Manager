@@ -464,7 +464,7 @@ struct SidebarView: View {
       }
       .padding(.horizontal, 14)
 
-      Text("Codex 皮肤管理器 · v1.6.0")
+      Text("Codex 皮肤管理器 · v1.6.1")
         .font(.system(size: 10, design: .monospaced))
         .foregroundStyle(.white.opacity(0.32))
         .padding(.horizontal, 22)
@@ -1236,8 +1236,11 @@ struct DreamSkinStudioApp: App {
     MenuBarExtra {
       MenuBarStatusView(store: store)
     } label: {
-      Image(systemName: store.isRuntimeActive ? "paintpalette.fill" : "paintpalette")
-        .accessibilityLabel("Codex 皮肤管理器")
+      HStack(spacing: 4) {
+        Image(systemName: store.isRuntimeActive ? "paintpalette.fill" : "paintpalette")
+        Text("皮肤")
+      }
+      .accessibilityLabel("Codex 皮肤管理器")
     }
     .menuBarExtraStyle(.menu)
   }

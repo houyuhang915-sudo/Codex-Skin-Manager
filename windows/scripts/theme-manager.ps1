@@ -1378,7 +1378,7 @@ $sidebarStatus = New-Object System.Windows.Forms.Label
 $sidebarStatus.Anchor = 'Left,Bottom'
 $sidebarStatus.Location = New-Object System.Drawing.Point(24, 750)
 $sidebarStatus.Size = New-Object System.Drawing.Size(180, 42)
-$sidebarStatus.Text = "安全注入 · 本机回环`r`nWindows v1.6.0"
+$sidebarStatus.Text = "安全注入 · 本机回环`r`nWindows v1.6.1"
 $sidebarStatus.ForeColor = [System.Drawing.Color]::FromArgb(135, 146, 144)
 $sidebarStatus.Font = New-Object System.Drawing.Font($FontName, 8)
 $sidebar.Controls.Add($sidebarStatus)

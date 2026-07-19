@@ -17,7 +17,7 @@
   <a href="./docs/platforms.md">平台说明</a>
 </p>
 
-> 当前版本：`1.6.0`。本项目为社区工具，与 OpenAI 无隶属关系。
+> 当前版本：`1.6.1`。本项目为社区工具，与 OpenAI 无隶属关系。
 
 ## 软件界面
 
@@ -81,14 +81,14 @@
 
 ## 下载与安装
 
-前往 [Releases](https://github.com/houyuhang915-sudo/Codex-Skin-Manager/releases) 下载 `v1.6.0`。
+前往 [Releases](https://github.com/houyuhang915-sudo/Codex-Skin-Manager/releases) 下载 `v1.6.1`。
 
 ### macOS
 
 下载：
 
 ```text
-Codex-Skin-Manager-1.6.0.dmg
+Codex-Skin-Manager-1.6.1.dmg
 ```
 
 安装步骤：
@@ -98,7 +98,7 @@ Codex-Skin-Manager-1.6.0.dmg
 3. 点击“一键安装”。
 4. 安装完成后从“应用程序”或自动打开的管理器中选择主题。
 
-管理器关闭主窗口后仍驻留在 macOS 菜单栏，可查看当前主题与连接状态、快速切换主题或重新打开完整窗口。
+管理器关闭主窗口后仍驻留在 macOS 顶部菜单栏，入口显示为“调色盘图标 + 皮肤”；可查看当前主题与连接状态、快速切换主题或重新打开完整窗口。
 
 默认路径：
 
@@ -115,7 +115,7 @@ Codex-Skin-Manager-1.6.0.dmg
 下载：
 
 ```text
-Codex-Skin-Manager-Setup-1.6.0.exe
+Codex-Skin-Manager-Setup-1.6.1.exe
 ```
 
 安装步骤：
@@ -130,7 +130,7 @@ Codex-Skin-Manager-Setup-1.6.0.exe
 默认路径：
 
 ```text
-引擎：%LOCALAPPDATA%\CodexDreamSkin\engine-1.6.0
+引擎：%LOCALAPPDATA%\CodexDreamSkin\engine-1.6.1
 主题：%LOCALAPPDATA%\CodexDreamSkin\themes
 状态：%LOCALAPPDATA%\CodexDreamSkin
 ```
@@ -175,7 +175,7 @@ my-theme/
 安装包会自动安装 `codex-skin-theme-creator`。也可以从 Release 下载：
 
 ```text
-codex-skin-theme-creator-1.6.0.zip
+codex-skin-theme-creator-1.6.1.zip
 ```
 
 Skill 默认位置：
@@ -269,7 +269,7 @@ macos/tests/run-tests.sh
 macos/scripts/build-studio-app-macos.sh \
   "$HOME/Desktop/Codex 皮肤管理器.app"
 macos/scripts/build-installer-dmg-macos.sh \
-  "$HOME/Desktop/Codex-Skin-Manager-1.6.0.dmg"
+  "$HOME/Desktop/Codex-Skin-Manager-1.6.1.dmg"
 ```
 
 Windows 测试与管理器：
@@ -310,7 +310,7 @@ script/                        构建与文档维护工具
 - Windows NSIS 安装包格式检查
 - Skill 结构校验
 
-Release 中的 `Codex-Skin-Manager-1.6.0-SHA256.txt` 可用于核对下载文件。
+Release 中的 `Codex-Skin-Manager-1.6.1-SHA256.txt` 可用于核对下载文件。
 
 ## 许可
 

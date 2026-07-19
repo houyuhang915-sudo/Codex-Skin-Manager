@@ -59,7 +59,7 @@ That ZIP contains a visible installer plus a hidden `.codex-dream-skin-studio` e
 Build a macOS disk image containing the graphical one-click installer:
 
 ```bash
-./scripts/build-installer-dmg-macos.sh "$HOME/Desktop/Codex 皮肤管理器 1.6.0.dmg"
+./scripts/build-installer-dmg-macos.sh "$HOME/Desktop/Codex 皮肤管理器 1.6.1.dmg"
 ```
 
 Open the DMG, launch `安装 Codex 皮肤管理器.app`, and click `一键安装`. It deploys the engine under `~/.codex`, installs the prebuilt manager under `~/Applications`, creates a Desktop entry, and opens the manager.
