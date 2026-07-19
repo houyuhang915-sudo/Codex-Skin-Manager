@@ -7,6 +7,35 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles()
 
+$instanceCreated = $false
+$instanceMutex = [System.Threading.Mutex]::new(
+  $true,
+  'Local\CodexSkinManager',
+  [ref]$instanceCreated
+)
+if (-not $instanceCreated) {
+  for ($attempt = 0; $attempt -lt 10; $attempt++) {
+    try {
+      $existingShowEvent = [System.Threading.EventWaitHandle]::OpenExisting(
+        'Local\CodexSkinManager.Show'
+      )
+      try { [void]$existingShowEvent.Set() } finally { $existingShowEvent.Dispose() }
+      break
+    } catch {
+      Start-Sleep -Milliseconds 50
+    }
+  }
+  $instanceMutex.Dispose()
+  exit 0
+}
+$showEventCreated = $false
+$showEvent = [System.Threading.EventWaitHandle]::new(
+  $false,
+  [System.Threading.EventResetMode]::AutoReset,
+  'Local\CodexSkinManager.Show',
+  [ref]$showEventCreated
+)
+
 $EngineRoot = Split-Path -Parent $PSScriptRoot
 $ThemeRoot = Join-Path $env:LOCALAPPDATA 'CodexDreamSkin\themes'
 $SwitchScript = Join-Path $PSScriptRoot 'switch-theme.ps1'
@@ -318,6 +347,15 @@ $script:switchProcess = $null
 $script:switchThemeId = $null
 $script:runtimeSnapshot = $null
 $script:themeLibraryFingerprint = ''
+$script:trayIcon = $null
+$script:trayMenu = $null
+$script:trayStatusItem = $null
+$script:trayCurrentThemeItem = $null
+$script:trayThemesMenu = $null
+$script:trayRestoreItem = $null
+$script:trayMenuFingerprint = ''
+$script:explicitExit = $false
+$script:hasShownTrayHint = $false
 
 function New-ManagerButton {
   param(
@@ -437,6 +475,9 @@ function Get-ManagerRuntimeSnapshot {
     if ($state.session -ceq 'paused') {
       return [pscustomobject]@{ Label = '原版模式'; Connected = $false }
     }
+    if (Test-DreamSkinRecordedInjector -State $state) {
+      return [pscustomobject]@{ Label = 'Codex 已连接'; Connected = $true }
+    }
 
     $port = if ($state.port) { [int]$state.port } else { 9335 }
     $codex = Get-DreamSkinCodexInstallFromState -State $state
@@ -452,9 +493,6 @@ function Get-ManagerRuntimeSnapshot {
       }
     }
 
-    if (Test-DreamSkinRecordedInjector -State $state) {
-      return [pscustomobject]@{ Label = 'Codex 已连接'; Connected = $true }
-    }
   } catch {}
   return [pscustomobject]@{ Label = '等待连接'; Connected = $false }
 }
@@ -464,6 +502,63 @@ function Get-RuntimeLabel {
     $script:runtimeSnapshot = Get-ManagerRuntimeSnapshot
   }
   return [string]$script:runtimeSnapshot.Label
+}
+
+function Show-ManagerWindow {
+  if ($null -eq $form -or $form.IsDisposed) { return }
+  $form.ShowInTaskbar = $true
+  if ($form.WindowState -eq [System.Windows.Forms.FormWindowState]::Minimized) {
+    $form.WindowState = [System.Windows.Forms.FormWindowState]::Normal
+  }
+  $form.Show()
+  $form.Activate()
+  $form.BringToFront()
+}
+
+function Update-TrayState {
+  if ($null -eq $script:trayIcon) { return }
+
+  $runtimeLabelText = Get-RuntimeLabel
+  $activeTheme = $script:themes |
+    Where-Object Id -ceq $script:activeThemeId |
+    Select-Object -First 1
+  $activeThemeName = if ($null -eq $activeTheme) {
+    '尚未选择'
+  } else {
+    [string]$activeTheme.Manifest.name
+  }
+  $script:trayStatusItem.Text = '实时状态：{0}' -f $runtimeLabelText
+  $script:trayCurrentThemeItem.Text = '当前主题：{0}' -f $activeThemeName
+
+  $tooltip = 'Codex 皮肤 · {0} · {1}' -f $activeThemeName, $runtimeLabelText
+  if ($tooltip.Length -gt 63) { $tooltip = $tooltip.Substring(0, 63) }
+  $script:trayIcon.Text = $tooltip
+
+  $menuFingerprint = @(
+    [string]$script:activeThemeId
+    ($script:themes | ForEach-Object { '{0}:{1}' -f $_.Id, $_.Manifest.name }) -join '|'
+  ) -join '||'
+  if ($menuFingerprint -cne $script:trayMenuFingerprint) {
+    foreach ($item in @($script:trayThemesMenu.DropDownItems)) { $item.Dispose() }
+    $script:trayThemesMenu.DropDownItems.Clear()
+    foreach ($theme in $script:themes) {
+      $themeItem = New-Object System.Windows.Forms.ToolStripMenuItem
+      $themeItem.Text = [string]$theme.Manifest.name
+      $themeItem.Tag = [string]$theme.Id
+      $themeItem.Checked = [string]$theme.Id -ceq [string]$script:activeThemeId
+      $themeItem.Enabled = $null -eq $script:switchProcess -and -not $themeItem.Checked
+      $themeItem.add_Click({
+        param($sender, $eventArgs)
+        Start-ThemeSwitch -ThemeId ([string]$sender.Tag)
+      })
+      [void]$script:trayThemesMenu.DropDownItems.Add($themeItem)
+    }
+    $script:trayMenuFingerprint = $menuFingerprint
+  }
+
+  $script:trayThemesMenu.Enabled = $script:themes.Count -gt 0 -and $null -eq $script:switchProcess
+  $script:trayRestoreItem.Enabled = $script:activeThemeId -cne 'codex-default' -and
+    $null -eq $script:switchProcess
 }
 
 function Update-NavigationState {
@@ -916,6 +1011,7 @@ function Reload-ThemeLibrary {
   Update-HeaderState
   Update-NavigationState
   Update-ThemeCards
+  Update-TrayState
 }
 
 function Get-ThemeSwitchFailureMessage {
@@ -983,6 +1079,7 @@ try {
     $selectedTheme = $script:themes | Where-Object Id -ceq $ThemeId | Select-Object -First 1
     $statusLabel.Text = '正在应用：{0}' -f $selectedTheme.Manifest.name
     Set-ApplyButtonsEnabled -Enabled $false
+    Update-TrayState
     $switchTimer.Start()
   } catch {
     $script:switchProcess = $null
@@ -1132,6 +1229,45 @@ $form.Icon = if (Test-Path (Join-Path $EngineRoot 'assets\DreamSkinAppIcon.ico')
   New-Object System.Drawing.Icon((Join-Path $EngineRoot 'assets\DreamSkinAppIcon.ico'))
 } else { $null }
 
+$script:trayMenu = New-Object System.Windows.Forms.ContextMenuStrip
+$script:trayMenu.ShowImageMargin = $false
+$script:trayStatusItem = New-Object System.Windows.Forms.ToolStripMenuItem
+$script:trayStatusItem.Enabled = $false
+$script:trayCurrentThemeItem = New-Object System.Windows.Forms.ToolStripMenuItem
+$script:trayCurrentThemeItem.Enabled = $false
+$script:trayThemesMenu = New-Object System.Windows.Forms.ToolStripMenuItem
+$script:trayThemesMenu.Text = '快速切换主题'
+$trayOpenManagerItem = New-Object System.Windows.Forms.ToolStripMenuItem
+$trayOpenManagerItem.Text = '打开管理器'
+$trayOpenCodexItem = New-Object System.Windows.Forms.ToolStripMenuItem
+$trayOpenCodexItem.Text = '打开 Codex'
+$script:trayRestoreItem = New-Object System.Windows.Forms.ToolStripMenuItem
+$script:trayRestoreItem.Text = '恢复 Codex 原版'
+$trayExitItem = New-Object System.Windows.Forms.ToolStripMenuItem
+$trayExitItem.Text = '退出皮肤管理器'
+[void]$script:trayMenu.Items.Add($script:trayStatusItem)
+[void]$script:trayMenu.Items.Add($script:trayCurrentThemeItem)
+[void]$script:trayMenu.Items.Add((New-Object System.Windows.Forms.ToolStripSeparator))
+[void]$script:trayMenu.Items.Add($script:trayThemesMenu)
+[void]$script:trayMenu.Items.Add((New-Object System.Windows.Forms.ToolStripSeparator))
+[void]$script:trayMenu.Items.Add($trayOpenManagerItem)
+[void]$script:trayMenu.Items.Add($trayOpenCodexItem)
+[void]$script:trayMenu.Items.Add($script:trayRestoreItem)
+[void]$script:trayMenu.Items.Add((New-Object System.Windows.Forms.ToolStripSeparator))
+[void]$script:trayMenu.Items.Add($trayExitItem)
+
+$script:trayIcon = New-Object System.Windows.Forms.NotifyIcon
+$script:trayIcon.Icon = if ($null -ne $form.Icon) {
+  $form.Icon
+} else {
+  [System.Drawing.SystemIcons]::Application
+}
+$script:trayIcon.Text = 'Codex 皮肤管理器'
+$script:trayIcon.ContextMenuStrip = $script:trayMenu
+$script:trayIcon.Visible = $true
+$script:trayIcon.add_DoubleClick({ Show-ManagerWindow })
+$trayOpenManagerItem.add_Click({ Show-ManagerWindow })
+
 $main = New-Object System.Windows.Forms.Panel
 $main.Dock = 'Fill'
 $main.BackColor = $CanvasColor
@@ -1242,7 +1378,7 @@ $sidebarStatus = New-Object System.Windows.Forms.Label
 $sidebarStatus.Anchor = 'Left,Bottom'
 $sidebarStatus.Location = New-Object System.Drawing.Point(24, 750)
 $sidebarStatus.Size = New-Object System.Drawing.Size(180, 42)
-$sidebarStatus.Text = "安全注入 · 本机回环`r`nWindows v1.5.0"
+$sidebarStatus.Text = "安全注入 · 本机回环`r`nWindows v1.6.0"
 $sidebarStatus.ForeColor = [System.Drawing.Color]::FromArgb(135, 146, 144)
 $sidebarStatus.Font = New-Object System.Drawing.Font($FontName, 8)
 $sidebar.Controls.Add($sidebarStatus)
@@ -1692,14 +1828,37 @@ $switchTimer.add_Tick({
 })
 
 $libraryMonitorTimer = New-Object System.Windows.Forms.Timer
-$libraryMonitorTimer.Interval = 1500
+$libraryMonitorTimer.Interval = 3000
 $libraryMonitorTimer.add_Tick({
   if ($null -ne $script:switchProcess) { return }
   $fingerprint = Get-ThemeLibraryFingerprint
   if ($fingerprint -cne $script:themeLibraryFingerprint) {
     Reload-ThemeLibrary
     $statusLabel.Text = '检测到新主题，皮肤库已自动刷新'
+    return
   }
+
+  $newActiveThemeId = Get-ActiveThemeId
+  $newRuntimeSnapshot = Get-ManagerRuntimeSnapshot
+  $activeChanged = [string]$newActiveThemeId -cne [string]$script:activeThemeId
+  $runtimeChanged = $null -eq $script:runtimeSnapshot -or
+    [string]$newRuntimeSnapshot.Label -cne [string]$script:runtimeSnapshot.Label -or
+    [bool]$newRuntimeSnapshot.Connected -ne [bool]$script:runtimeSnapshot.Connected
+  $script:activeThemeId = $newActiveThemeId
+  $script:runtimeSnapshot = $newRuntimeSnapshot
+  if ($activeChanged -or $runtimeChanged) {
+    Update-HeaderState
+  }
+  if ($activeChanged) {
+    Update-ThemeCards
+  }
+  Update-TrayState
+})
+
+$activationTimer = New-Object System.Windows.Forms.Timer
+$activationTimer.Interval = 350
+$activationTimer.add_Tick({
+  if ($showEvent.WaitOne(0)) { Show-ManagerWindow }
 })
 
 $allThemesButton.add_Click({ Set-ManagerView -Mode 'all' })
@@ -1767,6 +1926,7 @@ $openCodexAction = {
 }
 $openCodexButton.add_Click($openCodexAction)
 $runtimeOpenButton.add_Click($openCodexAction)
+$trayOpenCodexItem.add_Click($openCodexAction)
 
 $restoreOriginalAction = {
   if ($script:activeThemeId -cne 'codex-default') {
@@ -1775,6 +1935,7 @@ $restoreOriginalAction = {
 }
 $restoreOriginalButton.add_Click($restoreOriginalAction)
 $runtimeRestoreButton.add_Click($restoreOriginalAction)
+$script:trayRestoreItem.add_Click($restoreOriginalAction)
 
 $refreshAction = {
   Reload-ThemeLibrary
@@ -1783,15 +1944,41 @@ $refreshAction = {
 $refreshHeaderButton.add_Click($refreshAction)
 $runtimeRefreshButton.add_Click($refreshAction)
 
+$trayExitItem.add_Click({
+  $script:explicitExit = $true
+  $form.Close()
+})
+$form.add_FormClosing({
+  param($sender, $eventArgs)
+  if (-not $script:explicitExit -and
+      $eventArgs.CloseReason -eq [System.Windows.Forms.CloseReason]::UserClosing) {
+    $eventArgs.Cancel = $true
+    $form.ShowInTaskbar = $false
+    $form.Hide()
+    if (-not $script:hasShownTrayHint) {
+      $script:hasShownTrayHint = $true
+      $script:trayIcon.BalloonTipTitle = 'Codex 皮肤管理器'
+      $script:trayIcon.BalloonTipText = '已驻留系统托盘'
+      $script:trayIcon.ShowBalloonTip(1800)
+    }
+  }
+})
 $form.add_FormClosed({
   $switchTimer.Stop()
   $libraryMonitorTimer.Stop()
+  $activationTimer.Stop()
   if ($null -ne $script:switchProcess -and -not $script:switchProcess.HasExited) {
     try { $script:switchProcess.Kill() } catch {}
   }
   foreach ($image in $script:themeImages) { if ($null -ne $image) { $image.Dispose() } }
   if ($null -ne $script:activeBannerImage) { $script:activeBannerImage.Dispose() }
   if ($null -ne $logo.Image) { $logo.Image.Dispose() }
+  $script:trayIcon.Visible = $false
+  $script:trayIcon.Dispose()
+  $script:trayMenu.Dispose()
+  $showEvent.Dispose()
+  try { $instanceMutex.ReleaseMutex() } catch {}
+  $instanceMutex.Dispose()
 })
 $form.add_Resize({
   $pageSubtitle.Width = [Math]::Max(300, $pageHeader.ClientSize.Width - 390)
@@ -1800,6 +1987,7 @@ $form.add_Resize({
 
 Reload-ThemeLibrary
 $libraryMonitorTimer.Start()
-[void]$form.ShowDialog()
+$activationTimer.Start()
+[System.Windows.Forms.Application]::Run($form)
 if ($null -ne $form.Icon) { $form.Icon.Dispose() }
 $form.Dispose()

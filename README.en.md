@@ -17,7 +17,7 @@
   <a href="./docs/platforms.md">Platforms</a>
 </p>
 
-> Current version: `1.5.0`. This is a community project and is not affiliated with OpenAI.
+> Current version: `1.6.0`. This is a community project and is not affiliated with OpenAI.
 
 ## Manager UI
 
@@ -67,6 +67,7 @@ The screenshots come from real Codex pages. The capture utility hides conversati
 ## Features
 
 - Native macOS and Windows theme managers
+- Persistent macOS menu bar and Windows system tray controls with live status and quick switching
 - 14 bundled appearances with the stock Codex theme pinned first
 - One-click theme switching with synchronized manager state
 - In-app theme creation from local images
@@ -80,11 +81,11 @@ The screenshots come from real Codex pages. The capture utility hides conversati
 
 ## Download And Install
 
-Download `v1.5.0` from [Releases](https://github.com/houyuhang915-sudo/Codex-Skin-Manager/releases).
+Download `v1.6.0` from [Releases](https://github.com/houyuhang915-sudo/Codex-Skin-Manager/releases).
 
 ### macOS
 
-Download `Codex-Skin-Manager-1.5.0.dmg`, open it, then launch `安装 Codex 皮肤管理器.app` and click the install button.
+Download `Codex-Skin-Manager-1.6.0.dmg`, open it, then launch `安装 Codex 皮肤管理器.app` and click the install button.
 
 Installed locations:
 
@@ -96,19 +97,23 @@ Themes: ~/Library/Application Support/CodexDreamSkinStudio/themes
 
 Requirements: macOS 14 or later and the official Codex desktop app.
 
+Closing the main window keeps the manager in the macOS menu bar. The menu shows the active theme and live connection state, supports quick switching, and can reopen the full manager.
+
 ### Windows
 
-Run `Codex-Skin-Manager-Setup-1.5.0.exe`. Codex may remain open during setup. Launch `Codex 皮肤管理器` from the Start menu and use **One-click switch**.
+Run `Codex-Skin-Manager-Setup-1.6.0.exe`. Codex may remain open during setup. Launch `Codex 皮肤管理器` from the Start menu and use **One-click switch**.
 
 Installed locations:
 
 ```text
-Engine: %LOCALAPPDATA%\CodexDreamSkin\engine-1.5.0
+Engine: %LOCALAPPDATA%\CodexDreamSkin\engine-1.6.0
 Themes: %LOCALAPPDATA%\CodexDreamSkin\themes
 State: %LOCALAPPDATA%\CodexDreamSkin
 ```
 
 Requirements: Windows 10/11 and the Microsoft Store Codex app.
+
+Closing the main window hides the manager to the Windows system tray. Double-click the tray icon to restore it, or use its context menu for live status, quick switching, and exit.
 
 ## Use A Theme
 
@@ -116,7 +121,8 @@ Requirements: Windows 10/11 and the Microsoft Store Codex app.
 2. Select a theme preview.
 3. Click the one-click switch action.
 4. Check the current theme, connection status, and result in the manager.
-5. Select the pinned stock Codex theme to restore the official appearance.
+5. You can also switch directly from the macOS menu bar or Windows system tray.
+6. Select the pinned stock Codex theme to restore the official appearance.
 
 Themes change the visual layer only. Conversations, settings, projects, and composer controls remain native Codex UI.
 
@@ -144,7 +150,7 @@ The new theme appears in the library immediately.
 
 ## Codex Skill
 
-The installers deploy `codex-skin-theme-creator` automatically. A standalone `codex-skin-theme-creator-1.5.0.zip` is also available in the Release.
+The installers deploy `codex-skin-theme-creator` automatically. A standalone `codex-skin-theme-creator-1.6.0.zip` is also available in the Release.
 
 Default locations:
 
@@ -217,7 +223,7 @@ macos/tests/run-tests.sh
 macos/scripts/build-studio-app-macos.sh \
   "$HOME/Desktop/Codex 皮肤管理器.app"
 macos/scripts/build-installer-dmg-macos.sh \
-  "$HOME/Desktop/Codex-Skin-Manager-1.5.0.dmg"
+  "$HOME/Desktop/Codex-Skin-Manager-1.6.0.dmg"
 ```
 
 Windows:
@@ -250,7 +256,7 @@ script/                        Build and documentation utilities
 
 The release passes macOS build and regression checks, Windows PowerShell 5.1 and PowerShell 7 tests, cross-platform Node.js renderer tests, GitHub Actions static checks, DMG verification, NSIS format inspection, and Skill validation.
 
-Use `Codex-Skin-Manager-1.5.0-SHA256.txt` from the Release to verify downloaded files.
+Use `Codex-Skin-Manager-1.6.0-SHA256.txt` from the Release to verify downloaded files.
 
 ## License
 

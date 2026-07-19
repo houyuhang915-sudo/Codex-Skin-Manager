@@ -32,9 +32,8 @@ open "$HOME/Applications/Codex 皮肤管理器.app"
 #    Codex Dream Skin - Verify.command
 #    Codex Dream Skin - Restore.command
 
-# 5) Optional: menu bar (SwiftBar) — apply / pause / change image
-./Install\ Menu\ Bar.command
-# Look for 🎨 Skin in the top-right menu bar
+# 5) Close the main window to keep the native manager in the menu bar.
+#    Use the palette icon to inspect status, switch themes, or reopen the window.
 ```
 
 Install location after step 2:
@@ -60,7 +59,7 @@ That ZIP contains a visible installer plus a hidden `.codex-dream-skin-studio` e
 Build a macOS disk image containing the graphical one-click installer:
 
 ```bash
-./scripts/build-installer-dmg-macos.sh "$HOME/Desktop/Codex 皮肤管理器 1.5.0.dmg"
+./scripts/build-installer-dmg-macos.sh "$HOME/Desktop/Codex 皮肤管理器 1.6.0.dmg"
 ```
 
 Open the DMG, launch `安装 Codex 皮肤管理器.app`, and click `一键安装`. It deploys the engine under `~/.codex`, installs the prebuilt manager under `~/Applications`, creates a Desktop entry, and opens the manager.

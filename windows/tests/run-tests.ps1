@@ -428,7 +428,7 @@ try {
   }
   $installerSource = Get-Content -LiteralPath (Join-Path $Root 'installer\CodexDreamSkin.nsi') -Raw -Encoding UTF8
   if ($installerSource -notmatch 'PRODUCT_NAME "Codex 皮肤管理器"' -or
-    $installerSource -notmatch 'PRODUCT_VERSION "1\.5\.0"' -or
+    $installerSource -notmatch 'PRODUCT_VERSION "1\.6\.0"' -or
     $installerSource -notmatch 'Codex-Skin-Manager-Setup-\$\{PRODUCT_VERSION\}\.exe' -or
     $installerSource -notmatch 'engine-\$\{PRODUCT_VERSION\}') {
     throw 'The Windows product name or release filename is stale.'
@@ -482,6 +482,16 @@ try {
       $managerSource -notmatch '深色侧栏|SidebarColor' -or
       $managerSource -match 'System\.Windows\.Forms\.ListView') {
     throw 'The Windows manager is missing the card library or hidden asynchronous switching.'
+  }
+  if ($managerSource -notmatch 'System\.Windows\.Forms\.NotifyIcon' -or
+      $managerSource -notmatch 'System\.Windows\.Forms\.ContextMenuStrip' -or
+      $managerSource -notmatch 'Local\\CodexSkinManager\.Show' -or
+      $managerSource -notmatch 'add_FormClosing' -or
+      $managerSource -notmatch 'ShowInTaskbar = \$false' -or
+      $managerSource -notmatch 'Application\]::Run\(\$form\)' -or
+      $managerSource -notmatch 'Update-TrayState' -or
+      $managerSource -notmatch 'libraryMonitorTimer\.Interval = 3000') {
+    throw 'The Windows manager is missing tray residency, single-instance wake-up, or live status refresh.'
   }
   if ($switchSource -notmatch 'selection\.json' -or
       $switchSource -notmatch 'pause-dream-skin\.ps1' -or

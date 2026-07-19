@@ -17,7 +17,7 @@
   <a href="./docs/platforms.md">平台说明</a>
 </p>
 
-> 当前版本：`1.5.0`。本项目为社区工具，与 OpenAI 无隶属关系。
+> 当前版本：`1.6.0`。本项目为社区工具，与 OpenAI 无隶属关系。
 
 ## 软件界面
 
@@ -67,6 +67,7 @@
 ## 主要功能
 
 - macOS 与 Windows 图形主题管理器
+- macOS 菜单栏与 Windows 系统托盘后台常驻，可快速切换并查看实时状态
 - 内置 14 套外观，Codex 默认原版固定置顶
 - 一键切换主题并自动同步当前状态
 - 选择本地图片创建新主题
@@ -80,14 +81,14 @@
 
 ## 下载与安装
 
-前往 [Releases](https://github.com/houyuhang915-sudo/Codex-Skin-Manager/releases) 下载 `v1.5.0`。
+前往 [Releases](https://github.com/houyuhang915-sudo/Codex-Skin-Manager/releases) 下载 `v1.6.0`。
 
 ### macOS
 
 下载：
 
 ```text
-Codex-Skin-Manager-1.5.0.dmg
+Codex-Skin-Manager-1.6.0.dmg
 ```
 
 安装步骤：
@@ -96,6 +97,8 @@ Codex-Skin-Manager-1.5.0.dmg
 2. 双击“安装 Codex 皮肤管理器.app”。
 3. 点击“一键安装”。
 4. 安装完成后从“应用程序”或自动打开的管理器中选择主题。
+
+管理器关闭主窗口后仍驻留在 macOS 菜单栏，可查看当前主题与连接状态、快速切换主题或重新打开完整窗口。
 
 默认路径：
 
@@ -112,7 +115,7 @@ Codex-Skin-Manager-1.5.0.dmg
 下载：
 
 ```text
-Codex-Skin-Manager-Setup-1.5.0.exe
+Codex-Skin-Manager-Setup-1.6.0.exe
 ```
 
 安装步骤：
@@ -122,10 +125,12 @@ Codex-Skin-Manager-Setup-1.5.0.exe
 3. 选择主题并点击“一键切换”。
 4. 当前 Codex 窗口会直接应用主题；必要时管理器会提示重新打开窗口。
 
+管理器关闭主窗口后会隐藏到 Windows 系统托盘。双击托盘图标可恢复窗口，右键菜单可查看实时状态、快速切换主题或退出管理器。
+
 默认路径：
 
 ```text
-引擎：%LOCALAPPDATA%\CodexDreamSkin\engine-1.5.0
+引擎：%LOCALAPPDATA%\CodexDreamSkin\engine-1.6.0
 主题：%LOCALAPPDATA%\CodexDreamSkin\themes
 状态：%LOCALAPPDATA%\CodexDreamSkin
 ```
@@ -138,7 +143,8 @@ Codex-Skin-Manager-Setup-1.5.0.exe
 2. 在主题库中选择预览图。
 3. 点击“一键切换”。
 4. 管理器会显示当前主题、Codex 连接状态和切换结果。
-5. 需要回到官方外观时，选择置顶的“Codex 默认原版”。
+5. 也可以直接从 macOS 菜单栏或 Windows 系统托盘切换。
+6. 需要回到官方外观时，选择置顶的“Codex 默认原版”。
 
 主题只改变界面外观。对话、项目选择器、设置、输入框和其他功能仍由 Codex 原生界面提供。
 
@@ -169,7 +175,7 @@ my-theme/
 安装包会自动安装 `codex-skin-theme-creator`。也可以从 Release 下载：
 
 ```text
-codex-skin-theme-creator-1.5.0.zip
+codex-skin-theme-creator-1.6.0.zip
 ```
 
 Skill 默认位置：
@@ -263,7 +269,7 @@ macos/tests/run-tests.sh
 macos/scripts/build-studio-app-macos.sh \
   "$HOME/Desktop/Codex 皮肤管理器.app"
 macos/scripts/build-installer-dmg-macos.sh \
-  "$HOME/Desktop/Codex-Skin-Manager-1.5.0.dmg"
+  "$HOME/Desktop/Codex-Skin-Manager-1.6.0.dmg"
 ```
 
 Windows 测试与管理器：
@@ -304,7 +310,7 @@ script/                        构建与文档维护工具
 - Windows NSIS 安装包格式检查
 - Skill 结构校验
 
-Release 中的 `Codex-Skin-Manager-1.5.0-SHA256.txt` 可用于核对下载文件。
+Release 中的 `Codex-Skin-Manager-1.6.0-SHA256.txt` 可用于核对下载文件。
 
 ## 许可
 

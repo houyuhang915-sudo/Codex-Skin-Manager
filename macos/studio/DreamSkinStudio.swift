@@ -85,6 +85,7 @@ final class ThemeStore: ObservableObject {
   @Published var themes: [ThemeItem] = []
   @Published var activeID: String?
   @Published var runtimeState: RuntimeState?
+  @Published private(set) var runtimeConnected = false
   @Published var status = "正在读取皮肤库…"
   @Published var applyingThemeID: String?
   @Published var isCreateThemePresented = false
@@ -105,6 +106,7 @@ final class ThemeStore: ObservableObject {
   lazy var themeCreatorSkillRoot = codexHome
     .appendingPathComponent("skills/codex-skin-theme-creator", isDirectory: true)
   private var themeLibraryFingerprint = ""
+  private var liveStateFingerprint = ""
   private var themeMonitor: Timer?
   private let themeCreatorSkillFiles = [
     "SKILL.md",
@@ -117,11 +119,7 @@ final class ThemeStore: ObservableObject {
   var activeTheme: ThemeItem? { themes.first { $0.id == activeID } }
   var installedThemes: [ThemeItem] { themes.filter { !$0.isOriginal } }
   var isApplying: Bool { applyingThemeID != nil }
-  var isRuntimeActive: Bool {
-    if runtimeState?.session == "active" { return true }
-    guard let pid = runtimeState?.injectorPid, pid > 0 else { return false }
-    return kill(pid_t(pid), 0) == 0
-  }
+  var isRuntimeActive: Bool { runtimeConnected }
   var runtimeSessionLabel: String {
     if isRuntimeActive { return "运行中" }
     if runtimeState?.session == "paused" { return "已暂停" }
@@ -134,7 +132,7 @@ final class ThemeStore: ObservableObject {
     reload()
     installThemeCreatorSkill(silent: true)
     let monitor = Timer(timeInterval: 1.5, repeats: true) { [weak self] _ in
-      self?.refreshThemeLibraryIfNeeded()
+      self?.refreshMonitoredStateIfNeeded()
     }
     themeMonitor = monitor
     RunLoop.main.add(monitor, forMode: .common)
@@ -165,18 +163,10 @@ final class ThemeStore: ObservableObject {
       return left == right ? lhs.manifest.name < rhs.manifest.name : left < right
     }
 
-    runtimeState = (try? Data(contentsOf: runtimeStateURL))
-      .flatMap { try? decoder.decode(RuntimeState.self, from: $0) }
-    if runtimeState?.session == "paused", themes.contains(where: { $0.id == "codex-default" }) {
-      activeID = "codex-default"
-    } else if let data = try? Data(contentsOf: activeThemeURL),
-              let manifest = try? decoder.decode(ThemeManifest.self, from: data) {
-      activeID = manifest.id
-    } else {
-      activeID = nil
-    }
+    loadLiveState(using: decoder)
     isThemeCreatorSkillInstalled = themeCreatorSkillIsCurrent()
     themeLibraryFingerprint = currentThemeLibraryFingerprint()
+    liveStateFingerprint = currentLiveStateFingerprint()
     status = themes.isEmpty ? "没有找到皮肤包" : "已载入 \(themes.count) 套皮肤"
   }
 
@@ -366,11 +356,51 @@ final class ThemeStore: ObservableObject {
     return parts.joined(separator: "\n")
   }
 
-  private func refreshThemeLibraryIfNeeded() {
-    let fingerprint = currentThemeLibraryFingerprint()
-    guard fingerprint != themeLibraryFingerprint else { return }
-    reload()
-    status = "检测到新主题，皮肤库已自动刷新"
+  private func loadLiveState(using decoder: JSONDecoder = JSONDecoder()) {
+    runtimeState = (try? Data(contentsOf: runtimeStateURL))
+      .flatMap { try? decoder.decode(RuntimeState.self, from: $0) }
+    runtimeConnected = probeRuntimeConnection()
+    if runtimeState?.session == "paused", themes.contains(where: { $0.id == "codex-default" }) {
+      activeID = "codex-default"
+    } else if let data = try? Data(contentsOf: activeThemeURL),
+              let manifest = try? decoder.decode(ThemeManifest.self, from: data) {
+      activeID = manifest.id
+    } else {
+      activeID = nil
+    }
+  }
+
+  private func probeRuntimeConnection() -> Bool {
+    guard runtimeState?.session == "active",
+          let pid = runtimeState?.injectorPid,
+          pid > 0
+    else { return false }
+    return kill(pid_t(pid), 0) == 0
+  }
+
+  private func currentLiveStateFingerprint() -> String {
+    [runtimeStateURL, activeThemeURL].map { url in
+      let values = try? url.resourceValues(forKeys: [.contentModificationDateKey, .fileSizeKey])
+      return "\(url.lastPathComponent):\(values?.fileSize ?? -1):\(values?.contentModificationDate?.timeIntervalSince1970 ?? 0)"
+    }.joined(separator: "|")
+  }
+
+  private func refreshMonitoredStateIfNeeded() {
+    let libraryFingerprint = currentThemeLibraryFingerprint()
+    if libraryFingerprint != themeLibraryFingerprint {
+      reload()
+      status = "检测到新主题，皮肤库已自动刷新"
+      return
+    }
+
+    let stateFingerprint = currentLiveStateFingerprint()
+    if stateFingerprint != liveStateFingerprint {
+      loadLiveState()
+      liveStateFingerprint = stateFingerprint
+    } else {
+      let connected = probeRuntimeConnection()
+      if connected != runtimeConnected { runtimeConnected = connected }
+    }
   }
 }
 
@@ -434,7 +464,7 @@ struct SidebarView: View {
       }
       .padding(.horizontal, 14)
 
-      Text("Codex 皮肤管理器 · v1.5.0")
+      Text("Codex 皮肤管理器 · v1.6.0")
         .font(.system(size: 10, design: .monospaced))
         .foregroundStyle(.white.opacity(0.32))
         .padding(.horizontal, 22)
@@ -1092,7 +1122,7 @@ struct RuntimeMetric: View {
 }
 
 struct ContentView: View {
-  @StateObject private var store = ThemeStore()
+  @ObservedObject var store: ThemeStore
   @State private var selection: StudioSection = .library
 
   var body: some View {
@@ -1126,6 +1156,50 @@ struct ContentView: View {
   }
 }
 
+struct MenuBarStatusView: View {
+  @ObservedObject var store: ThemeStore
+  @Environment(\.openWindow) private var openWindow
+
+  var body: some View {
+    Text("当前主题：\(store.activeTheme?.manifest.name ?? "尚未选择")")
+    Text("实时状态：\(store.runtimeSessionLabel)")
+    if let applyingThemeID = store.applyingThemeID,
+       let theme = store.themes.first(where: { $0.id == applyingThemeID }) {
+      Text("正在切换：\(theme.manifest.name)")
+    }
+
+    Divider()
+
+    Menu("快速切换") {
+      ForEach(store.themes) { theme in
+        Button {
+          store.apply(theme)
+        } label: {
+          Label(
+            theme.manifest.name,
+            systemImage: store.activeID == theme.id ? "checkmark.circle.fill" : "circle"
+          )
+        }
+        .disabled(store.isApplying || store.activeID == theme.id)
+      }
+    }
+    .disabled(store.themes.isEmpty)
+
+    Button("打开管理器") {
+      openWindow(id: "manager")
+      NSApp.activate(ignoringOtherApps: true)
+    }
+    Button("刷新实时状态", action: store.reload)
+    Button("打开 Codex", action: store.openCodex)
+
+    Divider()
+
+    Button("退出皮肤管理器") {
+      NSApp.terminate(nil)
+    }
+  }
+}
+
 extension Color {
   init(hex: String) {
     let cleaned = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
@@ -1145,9 +1219,11 @@ extension Color {
 
 @main
 struct DreamSkinStudioApp: App {
+  @StateObject private var store = ThemeStore()
+
   var body: some Scene {
-    WindowGroup {
-      ContentView()
+    Window("Codex 皮肤管理器", id: "manager") {
+      ContentView(store: store)
         .frame(minWidth: 1320, minHeight: 700)
     }
     .defaultSize(width: 1380, height: 860)
@@ -1156,5 +1232,13 @@ struct DreamSkinStudioApp: App {
     .commands {
       CommandGroup(replacing: .newItem) { }
     }
+
+    MenuBarExtra {
+      MenuBarStatusView(store: store)
+    } label: {
+      Image(systemName: store.isRuntimeActive ? "paintpalette.fill" : "paintpalette")
+        .accessibilityLabel("Codex 皮肤管理器")
+    }
+    .menuBarExtraStyle(.menu)
   }
 }
