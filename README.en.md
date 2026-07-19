@@ -47,11 +47,11 @@
     <td colspan="2" align="center"><strong>Cartethyia · Sea Breeze</strong></td>
   </tr>
   <tr>
-    <td><img src="docs/images/showcase/miku-home.png" alt="Hatsune Miku light theme home page"></td>
-    <td><img src="docs/images/showcase/miku-chat.png" alt="Hatsune Miku light theme chat page"></td>
+    <td><img src="docs/images/showcase/miku-home.png" alt="Hatsune Miku system-adaptive theme home page in light mode"></td>
+    <td><img src="docs/images/showcase/miku-chat.png" alt="Hatsune Miku system-adaptive theme chat page in light mode"></td>
   </tr>
   <tr>
-    <td colspan="2" align="center"><strong>Hatsune Miku · Light</strong></td>
+    <td colspan="2" align="center"><strong>Hatsune Miku · Follow System (Light Preview)</strong></td>
   </tr>
   <tr>
     <td><img src="docs/images/showcase/cyrene-home.png" alt="Cyrene theme home page"></td>

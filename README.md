@@ -47,11 +47,11 @@
     <td colspan="2" align="center"><strong>卡提希娅 · 风栖海境</strong></td>
   </tr>
   <tr>
-    <td><img src="docs/images/showcase/miku-home.png" alt="初音未来浅色主题初始页"></td>
-    <td><img src="docs/images/showcase/miku-chat.png" alt="初音未来浅色主题对话页"></td>
+    <td><img src="docs/images/showcase/miku-home.png" alt="初音未来跟随系统主题的浅色初始页效果"></td>
+    <td><img src="docs/images/showcase/miku-chat.png" alt="初音未来跟随系统主题的浅色对话页效果"></td>
   </tr>
   <tr>
-    <td colspan="2" align="center"><strong>初音未来 · 浅色模式</strong></td>
+    <td colspan="2" align="center"><strong>初音未来 · 跟随系统（浅色效果）</strong></td>
   </tr>
   <tr>
     <td><img src="docs/images/showcase/cyrene-home.png" alt="昔涟主题初始页"></td>

@@ -27,6 +27,10 @@ assert.equal(
 );
 assert.equal(windowsCss, macosCss, "Windows and macOS must ship the same theme stylesheet.");
 assert.equal(windowsMiku, macosMiku, "Bundled Miku manifests must remain identical across platforms.");
+const miku = JSON.parse(windowsMiku);
+assert.equal(miku.appearance, "auto", "The bundled Hatsune Miku theme must follow system appearance.");
+assert.ok(miku.colorsLight, "The bundled Hatsune Miku theme must provide a light palette.");
+assert.ok(miku.colorsDark, "The bundled Hatsune Miku theme must provide a dark palette.");
 
 assert.match(
   windowsTemplate,

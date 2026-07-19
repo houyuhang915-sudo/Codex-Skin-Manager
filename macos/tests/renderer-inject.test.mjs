@@ -32,6 +32,11 @@ assert.match(
 );
 assert.match(
   template,
+  /matchMedia\("\(prefers-color-scheme: dark\)"\)[\s\S]{0,180}addEventListener\("change", mediaHandler\)/,
+  "System appearance changes must trigger an immediate theme refresh.",
+);
+assert.match(
+  template,
   /dream-skin-settings-sidebar[\s\S]{0,600}dream-skin-settings-shell/,
   "Settings navigation and content surfaces must receive stable theme classes.",
 );
@@ -65,7 +70,9 @@ assert.doesNotMatch(
   /main\.main-surface\s*>\s*header\.app-header-tint\s*\{[^}]*\b(?:position|z-index)\s*:/,
   "Theme CSS must preserve the native fixed header and side-panel control.",
 );
-assert.equal(miku.appearance, "light", "The bundled Hatsune Miku theme must use its light palette.");
+assert.equal(miku.appearance, "auto", "The bundled Hatsune Miku theme must follow system appearance.");
+assert.ok(miku.colorsLight, "The bundled Hatsune Miku theme must provide a light palette.");
+assert.ok(miku.colorsDark, "The bundled Hatsune Miku theme must provide a dark palette.");
 assert.equal(miku.avatarOverlay, "show", "Theme switches must preserve the pet overlay.");
 
-console.log("PASS: renderer appearance, route backgrounds, settings, cleanup, and Miku light mode are covered.");
+console.log("PASS: renderer appearance, route backgrounds, settings, cleanup, and adaptive Miku mode are covered.");

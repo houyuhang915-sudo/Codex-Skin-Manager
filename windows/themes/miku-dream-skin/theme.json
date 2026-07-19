@@ -6,7 +6,7 @@
   "category": "角色",
   "style": "miku-stage",
   "avatarOverlay": "show",
-  "appearance": "light",
+  "appearance": "auto",
   "brandSubtitle": "MIKU CODEX",
   "tagline": "和初音未来一起，把灵感写成代码与旋律。",
   "projectPrefix": "选择项目 · ",

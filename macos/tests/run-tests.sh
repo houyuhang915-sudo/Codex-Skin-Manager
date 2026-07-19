@@ -75,7 +75,8 @@ for theme_id in "${THEME_IDS[@]}"; do
     if (manifest.image !== "background.png" || manifest.preview !== "preview.png") process.exit(1);
     if ("taskImage" in manifest) process.exit(1);
     if (manifest.id === "miku-dream-skin" &&
-        (!manifest.colorsLight || !manifest.colorsDark || !payload.hasColorsLight || !payload.hasColorsDark)) process.exit(1);
+        (manifest.appearance !== "auto" || !manifest.colorsLight || !manifest.colorsDark ||
+         !payload.hasColorsLight || !payload.hasColorsDark)) process.exit(1);
   ' "$PAYLOAD_JSON" "$theme_dir/theme.json" "$theme_id"
 done
 [ -s "$ROOT/themes/black-gold-stage/identity-reference.png" ]

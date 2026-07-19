@@ -379,6 +379,10 @@ try {
       $manifest.avatarOverlay -cne 'show' -or $null -ne $manifest.taskImage) {
       throw "Theme $themeId does not follow the schema 2 single-image format."
     }
+    if ($themeId -ceq 'miku-dream-skin' -and
+      ($manifest.appearance -cne 'auto' -or $null -eq $manifest.colorsLight -or $null -eq $manifest.colorsDark)) {
+      throw 'The Hatsune Miku theme must follow the system and provide both light and dark palettes.'
+    }
     if ($themeId -ne 'codex-default') {
       $payloadText = & $node.Path (Join-Path $Root 'scripts\injector.mjs') --check-payload --theme-dir $themeRoot
       if ($LASTEXITCODE -ne 0) { throw "Theme payload validation failed: $themeId" }
