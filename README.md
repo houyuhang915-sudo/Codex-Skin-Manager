@@ -81,6 +81,16 @@
 - 切换主题时保持 Codex 宠物层显示
 - 一键停止主题引擎并恢复 Codex 原版外观
 
+## 三分钟开始使用
+
+1. 从 [Releases](https://github.com/houyuhang915-sudo/Codex-Skin-Manager/releases) 下载当前平台的安装包。
+2. 完成安装并启动“Codex 皮肤管理器”；首次启动会部署主题引擎、内置主题和创建主题 Skill。
+3. 保持 Codex 打开，在主题库选择一张预览图，然后点击“一键切换”。
+4. 等待管理器显示“已应用”，Codex 当前窗口会自动刷新主题。
+5. 关闭管理器主窗口后，macOS 可从顶部“皮肤”菜单、Windows 可从系统托盘继续快速切换。
+
+第一次切换时，如果 Codex 尚未启动，管理器会尝试启动它。连接状态表示管理器是否已经连上本机 Codex 的主题运行时，不影响主题库浏览、创建或导入。
+
 ## 下载与安装
 
 前往 [Releases](https://github.com/houyuhang915-sudo/Codex-Skin-Manager/releases) 下载 `v1.7.0`。
@@ -161,7 +171,14 @@ Windows 关闭主窗口后会隐藏到系统托盘。图标未直接显示时，
 - macOS：窗口工具栏的下载图标，或顶部“皮肤”菜单中的“检查更新…”
 - Windows：窗口右上角、运行状态页，或系统托盘中的“检查更新”
 
-软件更新流程：
+更新分为两类：
+
+| 类型 | 包含内容 | 安装方式 | 是否保留用户数据 |
+|---|---|---|:---:|
+| 软件更新 | 管理器、注入器、安装器、内置主题和 Skill | 下载完整 DMG 或 EXE，校验后自动安装 | 是 |
+| 在线主题更新 | 新主题或已有主题的新图片、配色与清单 | 下载单个主题 ZIP，校验后原子写入主题库 | 是 |
+
+### 软件更新流程
 
 1. 下载并验证 Ed25519 签名更新清单。
 2. 比较语义版本，并选择当前平台安装包。
@@ -169,9 +186,28 @@ Windows 关闭主窗口后会隐藏到系统托盘。图标未直接显示时，
 4. macOS 自动挂载 DMG 并运行内置更新器；Windows 退出管理器后静默运行 NSIS。
 5. 安装完成后自动打开新版管理器。
 
-更新软件时 Codex 可以保持运行，用户主题、当前选择和状态数据不会被清空。下载或校验失败时继续使用现有版本。
+更新软件时 Codex 可以保持运行，用户主题、当前选择和状态数据不会被清空。下载、签名或校验失败时，当前版本保持原样，安装包不会执行。
 
 在线主题使用独立签名目录。发现兼容的新主题后可直接在更新界面安装，管理器会继续使用现有 schema 2 校验和原子替换流程。新增背景与配色通常只需下载主题 ZIP；涉及注入器、布局模块或主题格式变化时才发布完整软件版本。
+
+### 更新状态
+
+| 状态 | 含义 |
+|---|---|
+| 已是最新版 | 软件版本与签名清单一致，当前没有可安装的软件版本 |
+| 发现新版本 | 可以查看版本号和说明，并开始下载完整安装包 |
+| 有在线主题 | 软件无需升级，可单独安装兼容的新主题或主题修订 |
+| 检查中 / 下载中 / 安装中 | 后台任务正在执行，完成前不要重复点击 |
+| 离线或检查失败 | 网络、GitHub 访问或清单验证失败；现有软件与主题仍可使用 |
+| 校验失败 | 签名、大小或 SHA-256 与清单不一致，文件已被拒绝 |
+
+### 更新安全模型
+
+- 固定更新地址只读取本仓库 `main` 分支中的 `updates/stable.json` 与 `updates/themes.json`。
+- 两份清单都使用 Ed25519 分离签名；公钥内置在管理器中，私钥只保存在维护者密钥存储和 GitHub Actions Secret。
+- 所有下载地址必须使用 HTTPS，并同时匹配清单声明的字节数和 SHA-256。
+- 在线主题还会执行 schema 2、PNG 文件头、图片尺寸、路径边界和符号链接检查。
+- 更新清单只描述版本与文件，不向安装器传递任意命令行参数。
 
 ## 使用主题
 
@@ -183,6 +219,36 @@ Windows 关闭主窗口后会隐藏到系统托盘。图标未直接显示时，
 6. 需要回到官方外观时，选择置顶的“Codex 默认原版”。
 
 主题只改变界面外观。对话、项目选择器、设置、输入框和其他功能仍由 Codex 原生界面提供。
+
+## 常见问题
+
+### macOS 顶部没有“皮肤”入口
+
+先从“应用程序”启动一次 Codex 皮肤管理器。关闭红色窗口按钮后应用仍会驻留；全屏状态下把鼠标移到屏幕顶部。仍未出现时，确认活动监视器中存在“Codex 皮肤管理器”，然后重新打开应用。
+
+### Windows 托盘没有图标
+
+先从开始菜单启动一次管理器，再点击任务栏通知区域的向上箭头。Windows 可能把新图标收入隐藏区域，可在系统的“任务栏角溢出”设置中将它设为始终显示。
+
+### 显示“未连接”，但仍能浏览或选择主题
+
+“未连接”只代表当前没有连上 Codex 的本机 CDP 会话。打开 Codex 后再次点击“一键切换”；管理器会重新发现应用、启动主题运行时并刷新状态。端口冲突时会自动选择可用的本机端口。
+
+### Codex 已换肤，但管理器仍显示旧主题
+
+等待几秒让状态文件和界面同步；也可切换到“运行状态”页或从菜单栏/托盘重新打开主窗口。若状态仍旧，重新选择当前主题并执行一次切换，不需要重新安装。
+
+### 切换后局部颜色或背景没有刷新
+
+先进入另一个页面再返回。Codex 更新界面结构后，可重新执行“一键切换”让注入器扫描新窗口；持续异常时选择“Codex 默认原版”，再重新应用目标主题。
+
+### 更新检查失败
+
+确认设备可以访问 `github.com`、`raw.githubusercontent.com` 和 Release 下载地址。系统时间错误也会影响 HTTPS。管理器不会在验证失败时覆盖当前版本，可以稍后从更新入口重试，或从 Releases 手动安装相同版本。
+
+### 恢复 Codex 原版
+
+选择主题库置顶的“Codex 默认原版”，或使用菜单栏/托盘中的“恢复原版”。该操作停止主题注入并恢复由管理器调整的外观配置，不删除对话、项目和用户主题。
 
 ## 创建主题
 
@@ -298,6 +364,8 @@ git clone https://github.com/houyuhang915-sudo/Codex-Skin-Manager.git
 cd Codex-Skin-Manager
 ```
 
+基础依赖：Git、Node.js 22 或更新版本。macOS 构建需要 macOS 14、Xcode Command Line Tools 和 Swift；Windows 实机测试需要 Windows PowerShell 5.1 或 PowerShell 7，生成 EXE 需要 NSIS。
+
 macOS 测试与构建：
 
 ```bash
@@ -321,6 +389,72 @@ Windows 安装包：
 brew install nsis
 windows/scripts/build-installer-windows.sh
 ```
+
+更新清单与跨平台 Node 测试：
+
+```bash
+node script/update-feed.mjs validate
+node --test macos/tests/*.test.mjs windows/tests/*.test.mjs
+```
+
+## 维护者发布流程
+
+### 首次配置签名 Secret
+
+软件更新清单必须使用与 `updates/public-key.json` 配套的 Ed25519 私钥签名。私钥文件 `.update-private-key.jwk` 已被 `.gitignore` 排除，应另外备份到加密密钥库，并在仓库中配置一次：
+
+```bash
+gh secret set CODEX_UPDATE_PRIVATE_KEY_JWK \
+  --repo OWNER/Codex-Skin-Manager \
+  < .update-private-key.jwk
+```
+
+不要提交、截图或上传该私钥。私钥丢失后，需要发布一个内置新公钥的过渡版本，因此应至少保留一份独立加密备份。
+
+### 发布完整软件版本
+
+1. 更新 `macos/VERSION`、两个平台的管理器/注入器/安装器版本常量以及中英文 Changelog。
+2. 更新 README 中的版本号和安装包名称。
+3. 运行 macOS、Windows、Node、签名清单和打包测试。
+4. 合并并推送 `main`，确认 CI 通过。
+5. 创建与版本完全一致的标签并推送：
+
+```bash
+git tag -a v1.7.0 -m "Codex 皮肤管理器 v1.7.0"
+git push origin main
+git push origin v1.7.0
+```
+
+标签会触发 [Release 工作流](./.github/workflows/release.yml)，自动完成：
+
+1. 在 macOS Runner 构建 DMG，在 Windows Runner 构建 NSIS EXE。
+2. 打包 `codex-skin-theme-creator` Skill。
+3. 生成三份安装文件的 SHA-256 清单。
+4. 创建 GitHub Release 并上传安装包、Skill、校验文件与签名清单。
+5. 使用 GitHub Secret 签名新版更新源，并将最终 `updates/` 内容提交回 `main`。
+
+发布完成后，应核对 Release 至少包含 DMG、EXE、Skill ZIP 和 SHA-256 文件，并运行：
+
+```bash
+git pull --ff-only
+node script/update-feed.mjs validate
+```
+
+### 单独发布在线主题
+
+主题只调整图片、文字或配色，且不依赖新注入器时，可直接发布主题 ZIP：
+
+```bash
+node script/update-feed.mjs add-theme \
+  --theme PATH/TO/THEME_ID \
+  --theme-version 2 \
+  --minimum-app 1.7.0 \
+  --url https://github.com/OWNER/Codex-Skin-Manager/releases/download/TAG/THEME_ID-2.zip \
+  --output release/THEME_ID-2.zip \
+  --private-key .update-private-key.jwk
+```
+
+将 ZIP 上传到 URL 对应的 Release，提交更新后的 `updates/stable.json`、`updates/themes.json` 及两个 `.sig` 文件，再运行 `node script/update-feed.mjs validate`。管理器下一次检查时会只下载这个主题包。
 
 ## 项目结构
 

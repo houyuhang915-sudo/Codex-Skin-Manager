@@ -81,6 +81,16 @@ The screenshots come from real Codex pages. The capture utility hides conversati
 - Pet overlay preserved across all theme switches
 - One-click restoration of the stock Codex appearance
 
+## Three-Minute Quick Start
+
+1. Download the installer for your platform from [Releases](https://github.com/houyuhang915-sudo/Codex-Skin-Manager/releases).
+2. Install and launch Codex Skin Manager. The first launch deploys the theme engine, bundled themes, and theme-creator Skill.
+3. Keep Codex open, select a preview in the theme library, and click the one-click switch action.
+4. Wait for the manager to report that the theme is applied. The current Codex window refreshes automatically.
+5. After closing the main manager window, keep using the macOS `皮肤` menu or Windows system tray for quick switching.
+
+When Codex is not running during the first switch, the manager attempts to launch it. Connection status describes the local Codex theme runtime only; it does not block browsing, creating, or importing themes.
+
 ## Download And Install
 
 Download `v1.7.0` from [Releases](https://github.com/houyuhang915-sudo/Codex-Skin-Manager/releases).
@@ -136,9 +146,43 @@ Theme and connection state stay synchronized between the background control and 
 
 The manager checks in the background about six seconds after launch and does not repeat a successful check for 24 hours. Manual checks are available from the macOS toolbar and `皮肤` menu, or from the Windows header, runtime page, and system tray.
 
-The client verifies a detached Ed25519 signature, semantic version, HTTPS URL, declared size, and SHA-256 before accepting an update. macOS mounts the verified DMG and runs its bundled automatic updater. Windows exits only the manager, runs the verified NSIS package silently, and starts the new version. Codex, user themes, selection, and state remain in place.
+There are two update channels:
+
+| Type | Contents | Installation | User data preserved |
+|---|---|---|:---:|
+| Application update | Manager, injector, installer, bundled themes, and Skill | Download and verify a full DMG or EXE | Yes |
+| Online theme update | New themes or revised artwork, palette, and manifest | Download and atomically install one theme ZIP | Yes |
+
+### Application Update Flow
+
+1. Download the update manifest and verify its detached Ed25519 signature.
+2. Compare semantic versions and select the asset for the current platform.
+3. Require HTTPS and verify the declared byte size and SHA-256.
+4. On macOS, mount the verified DMG and launch its automatic updater. On Windows, exit only the manager and run the verified NSIS package silently.
+5. Relaunch the new manager after installation.
+
+Codex, user themes, the active selection, and state remain in place. A network, signature, or checksum failure leaves the current version unchanged and the downloaded installer is not executed.
 
 The signed online catalog is independent from application releases. Compatible schema 2 theme ZIPs are validated and installed atomically. New artwork and palettes can therefore ship as small theme downloads, while injector, layout-module, and schema changes continue to use full application releases.
+
+### Update States
+
+| State | Meaning |
+|---|---|
+| Up to date | The installed version matches the signed feed |
+| Update available | A newer application package can be downloaded |
+| Online themes available | The app does not need an upgrade; compatible themes can be installed separately |
+| Checking / Downloading / Installing | A background operation is active; wait before starting it again |
+| Offline or check failed | GitHub access, networking, or feed validation failed; installed content remains usable |
+| Verification failed | Signature, byte size, or SHA-256 did not match and the file was rejected |
+
+### Trust Model
+
+- Fixed endpoints read `updates/stable.json` and `updates/themes.json` from this repository's `main` branch.
+- Both manifests have detached Ed25519 signatures. The public key ships with the manager; the private key exists only in maintainer key storage and a GitHub Actions Secret.
+- Every asset must use HTTPS and match both the declared byte size and SHA-256.
+- Theme ZIPs additionally pass schema 2, PNG header, dimensions, path-boundary, and symbolic-link validation.
+- Feed metadata describes versions and files only; it does not provide arbitrary installer arguments.
 
 ## Use A Theme
 
@@ -150,6 +194,36 @@ The signed online catalog is independent from application releases. Compatible s
 6. Select the pinned stock Codex theme to restore the official appearance.
 
 Themes change the visual layer only. Conversations, settings, projects, and composer controls remain native Codex UI.
+
+## Troubleshooting
+
+### The macOS `皮肤` menu is missing
+
+Launch Codex Skin Manager once from Applications. Closing the red window button keeps it in the menu bar. In full screen, move the pointer to the top edge. If it is still missing, confirm that Codex Skin Manager is running in Activity Monitor, then reopen the app.
+
+### The Windows tray icon is missing
+
+Launch the manager once from the Start menu, then open the notification-area overflow arrow. Windows may place a new icon in the hidden area; use the taskbar corner-overflow setting to keep it visible.
+
+### The manager says disconnected but themes remain selectable
+
+Disconnected means that there is no active local CDP session with Codex. Open Codex and run the one-click switch again. The manager rediscovers the app, starts the theme runtime, and refreshes status. It automatically chooses another local port when the default is occupied.
+
+### Codex changed theme but the manager still shows the previous theme
+
+Allow a few seconds for the state file and UI to synchronize. Open the runtime page or reopen the main window from the menu/tray. If status is still stale, select the active theme and apply it once more; reinstalling is unnecessary.
+
+### Part of the background or palette did not refresh
+
+Navigate to another Codex page and return. After a Codex UI update, run the switch once more so the injector can scan the new window. For persistent visual state, restore the pinned stock theme and apply the target theme again.
+
+### Update checking fails
+
+Confirm access to `github.com`, `raw.githubusercontent.com`, and GitHub Release downloads. An incorrect system clock can also break HTTPS. Validation failures do not replace the installed version; retry later or install the same release manually.
+
+### Restore stock Codex
+
+Select the pinned stock theme or use the restore action in the menu bar/system tray. This stops theme injection and restores manager-controlled appearance settings without deleting conversations, projects, or user themes.
 
 ## Create A Theme
 
@@ -241,6 +315,8 @@ git clone https://github.com/houyuhang915-sudo/Codex-Skin-Manager.git
 cd Codex-Skin-Manager
 ```
 
+Base dependencies are Git and Node.js 22 or later. macOS builds require macOS 14, Xcode Command Line Tools, and Swift. Windows device testing uses Windows PowerShell 5.1 or PowerShell 7, and producing the EXE requires NSIS.
+
 macOS:
 
 ```bash
@@ -264,6 +340,72 @@ Installer:
 brew install nsis
 windows/scripts/build-installer-windows.sh
 ```
+
+Update-feed and cross-platform Node tests:
+
+```bash
+node script/update-feed.mjs validate
+node --test macos/tests/*.test.mjs windows/tests/*.test.mjs
+```
+
+## Maintainer Release Workflow
+
+### Configure The Signing Secret Once
+
+Update manifests must be signed by the Ed25519 private key paired with `updates/public-key.json`. `.update-private-key.jwk` is excluded by `.gitignore`; back it up in encrypted key storage and configure the repository once:
+
+```bash
+gh secret set CODEX_UPDATE_PRIVATE_KEY_JWK \
+  --repo OWNER/Codex-Skin-Manager \
+  < .update-private-key.jwk
+```
+
+Do not commit, screenshot, or upload the private key. Losing it requires a transition release with a newly embedded public key, so retain at least one separate encrypted backup.
+
+### Publish A Full Application Release
+
+1. Update `macos/VERSION`, platform manager/injector/installer version constants, and both changelogs.
+2. Update versioned installer names in the READMEs.
+3. Run macOS, Windows, Node, signed-feed, and packaging tests.
+4. Merge and push `main`, then confirm CI passes.
+5. Create and push a tag that exactly matches the version:
+
+```bash
+git tag -a v1.7.0 -m "Codex Skin Manager v1.7.0"
+git push origin main
+git push origin v1.7.0
+```
+
+The tag starts the [Release workflow](./.github/workflows/release.yml), which:
+
+1. Builds the DMG on a macOS runner and the NSIS EXE on a Windows runner.
+2. Packages the `codex-skin-theme-creator` Skill.
+3. Produces a SHA-256 list for all three packages.
+4. Creates a GitHub Release and uploads packages, the Skill, checksums, and signed manifests.
+5. Signs the new update feed using the GitHub Secret and commits the final `updates/` files back to `main`.
+
+After publishing, confirm that the Release contains at least the DMG, EXE, Skill ZIP, and SHA-256 file, then run:
+
+```bash
+git pull --ff-only
+node script/update-feed.mjs validate
+```
+
+### Publish An Online Theme Only
+
+When a theme changes only artwork, copy, or palette and needs no new injector, publish its ZIP independently:
+
+```bash
+node script/update-feed.mjs add-theme \
+  --theme PATH/TO/THEME_ID \
+  --theme-version 2 \
+  --minimum-app 1.7.0 \
+  --url https://github.com/OWNER/Codex-Skin-Manager/releases/download/TAG/THEME_ID-2.zip \
+  --output release/THEME_ID-2.zip \
+  --private-key .update-private-key.jwk
+```
+
+Upload the ZIP to the Release used by the URL, commit the updated `updates/stable.json`, `updates/themes.json`, and both `.sig` files, then run `node script/update-feed.mjs validate`. The manager downloads only that theme package on its next check.
 
 ## Repository Layout
 
