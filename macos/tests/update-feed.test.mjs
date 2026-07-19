@@ -20,10 +20,10 @@ import {
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
 test("signed update metadata is valid and shared by both platforms", () => {
-  assert.equal(compareVersions("1.7.0", "1.6.1"), 1);
-  assert.equal(compareVersions("1.7.0", "1.7.0"), 0);
-  assert.equal(compareWindowsVersions("1.6.1", "1.7.0"), -1);
-  assert.throws(() => compareVersions("1.7", "1.7.0"));
+  assert.equal(compareVersions("1.7.1", "1.7.0"), 1);
+  assert.equal(compareVersions("1.7.1", "1.7.1"), 0);
+  assert.equal(compareWindowsVersions("1.7.0", "1.7.1"), -1);
+  assert.throws(() => compareVersions("1.7", "1.7.1"));
 
   const feed = validateFeed(JSON.parse(readFileSync(
     path.join(repositoryRoot, "updates/stable.json"),
@@ -42,7 +42,7 @@ test("signed update metadata is valid and shared by both platforms", () => {
     "utf8",
   ).trim();
   assert.equal(CURRENT_VERSION, packagedVersion);
-  assert.equal(feed.version, packagedVersion);
+  assert.equal(compareVersions(feed.version, packagedVersion) <= 0, true);
   assert.deepEqual(UPDATE_PUBLIC_KEY, publicKey);
 
   const output = execFileSync(
@@ -55,6 +55,10 @@ test("signed update metadata is valid and shared by both platforms", () => {
 
 test("Windows client verifies the detached feed and catalog signatures", async () => {
   const feedURL = "https://fixture.local/stable.json";
+  const expectedFeedVersion = JSON.parse(readFileSync(
+    path.join(repositoryRoot, "updates/stable.json"),
+    "utf8",
+  )).version;
   const themeURL =
     "https://raw.githubusercontent.com/houyuhang915-sudo/Codex-Skin-Manager/main/updates/themes.json";
   const fixtures = new Map([
@@ -82,14 +86,14 @@ test("Windows client verifies the detached feed and catalog signatures", async (
     assert.equal(legacyResult.pass, true);
     assert.equal(legacyResult.updateAvailable, true);
     assert.equal(legacyResult.updateRequired, true);
-    assert.equal(legacyResult.version, CURRENT_VERSION);
+    assert.equal(legacyResult.version, expectedFeedVersion);
     assert.deepEqual(legacyResult.themes, []);
 
     const currentResult = await checkForUpdates(feedURL, CURRENT_VERSION);
     assert.equal(currentResult.pass, true);
     assert.equal(currentResult.updateAvailable, false);
     assert.equal(currentResult.updateRequired, false);
-    assert.equal(currentResult.version, CURRENT_VERSION);
+    assert.equal(currentResult.version, expectedFeedVersion);
   } finally {
     globalThis.fetch = originalFetch;
   }

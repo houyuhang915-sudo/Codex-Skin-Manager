@@ -364,7 +364,7 @@ final class UpdateService: ObservableObject {
       throw ManagerUpdateError.invalid("更新清单版本不受支持")
     }
     _ = try compareVersions(feed.version, feed.minimumVersion)
-    guard ISO8601DateFormatter().date(from: feed.publishedAt) != nil else {
+    guard UpdateMetadata.parsePublishedAt(feed.publishedAt) != nil else {
       throw ManagerUpdateError.invalid("更新发布日期无效")
     }
     _ = try secureURL(feed.releaseNotesUrl, label: "版本说明")
@@ -374,7 +374,7 @@ final class UpdateService: ObservableObject {
 
   private static func validate(catalog: OnlineThemeCatalog) throws {
     guard catalog.schemaVersion == 1, catalog.catalogVersion > 0,
-          ISO8601DateFormatter().date(from: catalog.publishedAt) != nil
+          UpdateMetadata.parsePublishedAt(catalog.publishedAt) != nil
     else { throw ManagerUpdateError.invalid("在线主题目录格式不受支持") }
     var ids = Set<String>()
     for theme in catalog.themes {

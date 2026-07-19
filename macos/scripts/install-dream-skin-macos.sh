@@ -63,10 +63,6 @@ if codex_is_running; then
   [ "$LAUNCH_AFTER_INSTALL" = "false" ] \
     || fail "Close Codex before an interactive installation so config.toml cannot be rewritten while the app is saving it."
 fi
-seed_bundled_presets
-if [ ! -f "$THEME_DIR/theme.json" ]; then
-  "$SCRIPT_DIR/switch-theme-macos.sh" --id preset-gothic-void-crusade --no-apply >/dev/null
-fi
 [ -f "$CONFIG_PATH" ] || fail "Codex config not found: $CONFIG_PATH. Launch Codex once, close it, and rerun the installer."
 "$SCRIPT_DIR/install-builtin-themes-macos.sh"
 "$SCRIPT_DIR/install-theme-creator-skill-macos.sh"

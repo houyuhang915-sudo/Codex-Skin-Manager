@@ -21,7 +21,7 @@
   <a href="./docs/platforms.md">平台说明</a>
 </p>
 
-> 当前版本：`1.7.0`。本项目为社区工具，与 OpenAI 无隶属关系。
+> 当前版本：`1.7.1`。本项目为社区工具，与 OpenAI 无隶属关系。
 
 ## 软件界面
 
@@ -97,14 +97,14 @@
 
 ## 下载与安装
 
-前往 [Releases](https://github.com/houyuhang915-sudo/Codex-Skin-Manager/releases) 下载 `v1.7.0`。
+前往 [Releases](https://github.com/houyuhang915-sudo/Codex-Skin-Manager/releases) 下载 `v1.7.1`。
 
 ### macOS
 
 下载：
 
 ```text
-Codex-Skin-Manager-1.7.0.dmg
+Codex-Skin-Manager-1.7.1.dmg
 ```
 
 安装步骤：
@@ -131,7 +131,7 @@ Codex-Skin-Manager-1.7.0.dmg
 下载：
 
 ```text
-Codex-Skin-Manager-Setup-1.7.0.exe
+Codex-Skin-Manager-Setup-1.7.1.exe
 ```
 
 安装步骤：
@@ -146,7 +146,7 @@ Codex-Skin-Manager-Setup-1.7.0.exe
 默认路径：
 
 ```text
-引擎：%LOCALAPPDATA%\CodexDreamSkin\engine-1.7.0
+引擎：%LOCALAPPDATA%\CodexDreamSkin\engine-1.7.1
 主题：%LOCALAPPDATA%\CodexDreamSkin\themes
 状态：%LOCALAPPDATA%\CodexDreamSkin
 ```
@@ -281,7 +281,7 @@ my-theme/
 安装包会自动安装 `codex-skin-theme-creator`。也可以从 Release 下载：
 
 ```text
-codex-skin-theme-creator-1.7.0.zip
+codex-skin-theme-creator-1.7.1.zip
 ```
 
 Skill 默认位置：
@@ -377,7 +377,7 @@ macos/tests/run-tests.sh
 macos/scripts/build-studio-app-macos.sh \
   "$HOME/Desktop/Codex 皮肤管理器.app"
 macos/scripts/build-installer-dmg-macos.sh \
-  "$HOME/Desktop/Codex-Skin-Manager-1.7.0.dmg"
+  "$HOME/Desktop/Codex-Skin-Manager-1.7.1.dmg"
 ```
 
 Windows 测试与管理器：
@@ -424,9 +424,9 @@ gh secret set CODEX_UPDATE_PRIVATE_KEY_JWK \
 5. 创建与版本完全一致的标签并推送：
 
 ```bash
-git tag -a v1.7.0 -m "Codex 皮肤管理器 v1.7.0"
+git tag -a v1.7.1 -m "Codex 皮肤管理器 v1.7.1"
 git push origin main
-git push origin v1.7.0
+git push origin v1.7.1
 ```
 
 标签会触发 [Release 工作流](./.github/workflows/release.yml)，自动完成：
@@ -452,7 +452,7 @@ node script/update-feed.mjs validate
 node script/update-feed.mjs add-theme \
   --theme PATH/TO/THEME_ID \
   --theme-version 2 \
-  --minimum-app 1.7.0 \
+  --minimum-app 1.7.1 \
   --url https://github.com/OWNER/Codex-Skin-Manager/releases/download/TAG/THEME_ID-2.zip \
   --output release/THEME_ID-2.zip \
   --private-key .update-private-key.jwk
@@ -484,7 +484,7 @@ script/                        构建与文档维护工具
 - Windows NSIS 安装包格式检查
 - Skill 结构校验
 
-Release 中的 `Codex-Skin-Manager-1.7.0-SHA256.txt` 可用于核对下载文件。
+Release 中的 `Codex-Skin-Manager-1.7.1-SHA256.txt` 可用于核对下载文件。
 
 ## 许可
 
