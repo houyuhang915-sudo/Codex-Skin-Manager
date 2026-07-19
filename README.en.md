@@ -115,6 +115,21 @@ Requirements: Windows 10/11 and the Microsoft Store Codex app.
 
 Closing the main window hides the manager to the Windows system tray. Double-click the tray icon to restore it, or use its context menu for live status, quick switching, and exit.
 
+## Background Controls
+
+Launch Codex Skin Manager once after installation to create its persistent background entry.
+
+| Platform | Entry | Main actions |
+|---|---|---|
+| macOS | The palette icon and `皮肤` label at the top-right of the screen | View the active theme and Codex connection, switch themes, restore stock appearance, reopen the manager, or exit |
+| Windows | The manager icon in the notification area at the bottom-right of the taskbar | Double-click to restore the window; right-click for status, switching, stock restoration, or exit |
+
+On macOS, the red close button closes only the main window. The manager continues running in the background. Move the pointer to the top edge when a full-screen app hides the menu bar. Use **退出皮肤管理器** in the `皮肤` menu to quit the process.
+
+On Windows, closing the main window hides it to the system tray. Open the taskbar overflow arrow when the icon is not immediately visible.
+
+Theme and connection state stay synchronized between the background control and the full manager.
+
 ## Use A Theme
 
 1. Open Codex Skin Manager.
