@@ -1,24 +1,24 @@
 {
   "schemaVersion": 1,
   "channel": "stable",
-  "version": "1.7.1",
+  "version": "1.7.2",
   "minimumVersion": "1.6.1",
-  "publishedAt": "2026-07-19T17:10:27.534Z",
-  "releaseNotesUrl": "https://github.com/houyuhang915-sudo/Codex-Skin-Manager/releases/tag/v1.7.1",
+  "publishedAt": "2026-07-21T10:11:41.473Z",
+  "releaseNotesUrl": "https://github.com/houyuhang915-sudo/Codex-Skin-Manager/releases/tag/v1.7.2",
   "platforms": {
     "macos": {
-      "url": "https://github.com/houyuhang915-sudo/Codex-Skin-Manager/releases/download/v1.7.1/Codex-Skin-Manager-1.7.1.dmg",
-      "sha256": "468699b1fe6c28fc5694dc09dd9560fc1105617e73bbd3a0b70582c9a3bb5f67",
-      "size": 51049036
+      "url": "https://github.com/houyuhang915-sudo/Codex-Skin-Manager/releases/download/v1.7.2/Codex-Skin-Manager-1.7.2.dmg",
+      "sha256": "6e2f6a517b4e13d8e9cebad68fb61a17e78344858be768d4d1e3377d63e06ea0",
+      "size": 51062030
     },
     "windows": {
-      "url": "https://github.com/houyuhang915-sudo/Codex-Skin-Manager/releases/download/v1.7.1/Codex-Skin-Manager-Setup-1.7.1.exe",
-      "sha256": "83cec869dfd5645c5d740346e9d3258ea6681003e8443e3b311990b91f57a10f",
-      "size": 42587937
+      "url": "https://github.com/houyuhang915-sudo/Codex-Skin-Manager/releases/download/v1.7.2/Codex-Skin-Manager-Setup-1.7.2.exe",
+      "sha256": "c47136b8fe7b5e29f24b8171136d3871c4eaf86be5a953f233a0241ffad61980",
+      "size": 42586764
     }
   },
   "themeCatalog": {
     "url": "https://raw.githubusercontent.com/houyuhang915-sudo/Codex-Skin-Manager/main/updates/themes.json",
-    "sha256": "dc830d79f5ea72014a26b86e95c7049f6f2f8a8a9599d25f526fac27b8afae24"
+    "sha256": "555f48c3e40193d6b931c74e97ef62315756463fd6a328087d22cb7fd6722d9d"
   }
 }
