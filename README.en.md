@@ -21,7 +21,7 @@
   <a href="./docs/platforms.md">Platforms</a>
 </p>
 
-> Current version: `1.7.1`. This is a community project and is not affiliated with OpenAI.
+> Current version: `1.7.2`. This is a community project and is not affiliated with OpenAI.
 
 ## Manager UI
 
@@ -75,6 +75,7 @@ The screenshots come from real Codex pages. The capture utility hides conversati
 - In-app update checks, verified downloads, installation, and relaunch
 - Independently updated online theme catalog for smaller theme-only downloads
 - 14 bundled appearances with the stock Codex theme pinned first
+- Startup repair for missing or incomplete bundled themes using the installed engine copy
 - One-click theme switching with synchronized manager state
 - In-app theme creation from local images
 - Horizontal crop focus, light/dark appearance, and palette controls
@@ -97,11 +98,21 @@ When Codex is not running during the first switch, the manager attempts to launc
 
 ## Download And Install
 
-Download `v1.7.1` from [Releases](https://github.com/houyuhang915-sudo/Codex-Skin-Manager/releases).
+### One-command npm / npx installation
+
+With Node.js 20 or later, run this directly in a macOS or Windows terminal:
+
+```bash
+npx --yes github:houyuhang915-sudo/Codex-Skin-Manager install
+```
+
+The small npm client verifies the Ed25519-signed update feed, HTTPS URL, declared size, and SHA-256 before selecting the current platform's DMG or EXE and launching its one-click installer. It does not modify the official Codex application. Add `--silent` at the end for an unattended Windows install.
+
+You can also download `v1.7.2` from [Releases](https://github.com/houyuhang915-sudo/Codex-Skin-Manager/releases).
 
 ### macOS
 
-Download `Codex-Skin-Manager-1.7.1.dmg`, open it, then launch `安装 Codex 皮肤管理器.app` and click the install button.
+Download `Codex-Skin-Manager-1.7.2.dmg`, open it, then launch `安装 Codex 皮肤管理器.app` and click the install button.
 
 Installed locations:
 
@@ -117,12 +128,12 @@ Closing the main window keeps the manager in the macOS menu bar under the palett
 
 ### Windows
 
-Run `Codex-Skin-Manager-Setup-1.7.1.exe`. Codex may remain open during setup. Launch `Codex 皮肤管理器` from the Start menu and use **One-click switch**.
+Run `Codex-Skin-Manager-Setup-1.7.2.exe`. Codex may remain open during setup. Launch `Codex 皮肤管理器` from the Start menu and use **One-click switch**.
 
 Installed locations:
 
 ```text
-Engine: %LOCALAPPDATA%\CodexDreamSkin\engine-1.7.1
+Engine: %LOCALAPPDATA%\CodexDreamSkin\engine-1.7.2
 Themes: %LOCALAPPDATA%\CodexDreamSkin\themes
 State: %LOCALAPPDATA%\CodexDreamSkin
 ```
@@ -213,6 +224,10 @@ Launch the manager once from the Start menu, then open the notification-area ove
 
 Disconnected means that there is no active local CDP session with Codex. Open Codex and run the one-click switch again. The manager rediscovers the app, starts the theme runtime, and refreshes status. It automatically chooses another local port when the default is occupied.
 
+### Only custom themes appear after installation
+
+Starting with `v1.7.2`, the manager checks its library at launch and restores missing or incomplete built-in themes from `~/.codex/codex-dream-skin-studio/themes`. If it reports that bundled resources are incomplete, the manager app was copied by itself or the engine copy is also missing; rerun `安装 Codex 皮肤管理器.app` from the complete DMG. The release build now mounts every generated DMG and proves that all 14 themes can be installed before publishing it.
+
 ### Codex changed theme but the manager still shows the previous theme
 
 Allow a few seconds for the state file and UI to synchronize. Open the runtime page or reopen the main window from the menu/tray. If status is still stale, select the active theme and apply it once more; reinstalling is unnecessary.
@@ -253,7 +268,7 @@ The new theme appears in the library immediately.
 
 ## Codex Skill
 
-The installers deploy `codex-skin-theme-creator` automatically. A standalone `codex-skin-theme-creator-1.7.1.zip` is also available in the Release.
+The installers deploy `codex-skin-theme-creator` automatically. A standalone `codex-skin-theme-creator-1.7.2.zip` is also available in the Release.
 
 Default locations:
 
@@ -328,7 +343,7 @@ macos/tests/run-tests.sh
 macos/scripts/build-studio-app-macos.sh \
   "$HOME/Desktop/Codex 皮肤管理器.app"
 macos/scripts/build-installer-dmg-macos.sh \
-  "$HOME/Desktop/Codex-Skin-Manager-1.7.1.dmg"
+  "$HOME/Desktop/Codex-Skin-Manager-1.7.2.dmg"
 ```
 
 Windows:
@@ -375,9 +390,9 @@ Do not commit, screenshot, or upload the private key. Losing it requires a trans
 5. Create and push a tag that exactly matches the version:
 
 ```bash
-git tag -a v1.7.1 -m "Codex Skin Manager v1.7.1"
+git tag -a v1.7.2 -m "Codex Skin Manager v1.7.2"
 git push origin main
-git push origin v1.7.1
+git push origin v1.7.2
 ```
 
 The tag starts the [Release workflow](./.github/workflows/release.yml), which:
@@ -403,7 +418,7 @@ When a theme changes only artwork, copy, or palette and needs no new injector, p
 node script/update-feed.mjs add-theme \
   --theme PATH/TO/THEME_ID \
   --theme-version 2 \
-  --minimum-app 1.7.1 \
+  --minimum-app 1.7.2 \
   --url https://github.com/OWNER/Codex-Skin-Manager/releases/download/TAG/THEME_ID-2.zip \
   --output release/THEME_ID-2.zip \
   --private-key .update-private-key.jwk
@@ -427,7 +442,7 @@ script/                        Build and documentation utilities
 
 The release passes macOS build and regression checks, Windows PowerShell 5.1 and PowerShell 7 tests, cross-platform Node.js renderer tests, GitHub Actions static checks, DMG verification, NSIS format inspection, and Skill validation.
 
-Use `Codex-Skin-Manager-1.7.1-SHA256.txt` from the Release to verify downloaded files.
+Use `Codex-Skin-Manager-1.7.2-SHA256.txt` from the Release to verify downloaded files.
 
 ## License
 

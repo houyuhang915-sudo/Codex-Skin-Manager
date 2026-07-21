@@ -21,11 +21,14 @@ struct ThemeManifest: Decodable {
 @main
 struct ThemePackageServiceTests {
   static func main() throws {
-    guard CommandLine.arguments.count == 3 else {
-      throw ThemePackageError.invalid("Usage: ThemePackageServiceTests <source-image> <test-root>")
+    guard CommandLine.arguments.count == 4 else {
+      throw ThemePackageError.invalid(
+        "Usage: ThemePackageServiceTests <source-image> <test-root> <builtin-themes-root>"
+      )
     }
     let source = URL(fileURLWithPath: CommandLine.arguments[1])
     let root = URL(fileURLWithPath: CommandLine.arguments[2], isDirectory: true)
+    let builtinThemesRoot = URL(fileURLWithPath: CommandLine.arguments[3], isDirectory: true)
     let themesRoot = root.appendingPathComponent("themes", isDirectory: true)
     try? FileManager.default.removeItem(at: root)
     try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -70,7 +73,39 @@ struct ThemePackageServiceTests {
     guard ThemePackageService.suggestedID(for: "蕾姆冰蓝夜庭").hasPrefix("lei-mu-bing-lan-ye-ting") else {
       throw ThemePackageError.invalid("Chinese theme name did not produce a complete suggested ID")
     }
-    print("PASS: theme creation, normalized PNG output, complete ID suggestion, and strict import rejection.")
+
+    let repairedRoot = root.appendingPathComponent("repaired-builtins", isDirectory: true)
+    let firstRepair = ThemePackageService.repairBuiltinThemes(
+      from: [builtinThemesRoot],
+      into: repairedRoot
+    )
+    guard firstRepair.repairedIDs == BuiltinThemeCatalog.orderedIDs,
+          firstRepair.unavailableIDs.isEmpty
+    else {
+      throw ThemePackageError.invalid("Built-in theme repair did not restore the complete catalog")
+    }
+    let secondRepair = ThemePackageService.repairBuiltinThemes(
+      from: [builtinThemesRoot],
+      into: repairedRoot
+    )
+    guard secondRepair.repairedIDs.isEmpty, secondRepair.unavailableIDs.isEmpty else {
+      throw ThemePackageError.invalid("Complete built-in themes were copied again")
+    }
+    try FileManager.default.removeItem(
+      at: repairedRoot.appendingPathComponent("miku-dream-skin/preview.png")
+    )
+    let damagedRepair = ThemePackageService.repairBuiltinThemes(
+      from: [builtinThemesRoot],
+      into: repairedRoot
+    )
+    guard damagedRepair.repairedIDs == ["miku-dream-skin"],
+          damagedRepair.unavailableIDs.isEmpty
+    else {
+      throw ThemePackageError.invalid("Damaged built-in theme was not repaired atomically")
+    }
+    print(
+      "PASS: theme creation, strict import rejection, and idempotent built-in theme repair."
+    )
   }
 
   private static func requireRejectedCopy(

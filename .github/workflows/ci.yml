@@ -95,17 +95,22 @@ jobs:
           windows_injector="$(sed -n 's/^const SKIN_VERSION = "\([^"]*\)";$/\1/p' windows/scripts/injector.mjs)"
           windows_updater="$(sed -n 's/^export const CURRENT_VERSION = "\([^"]*\)";$/\1/p' windows/scripts/update-client.mjs)"
           windows_manager="$(sed -n "s/^\$ManagerVersion = '\([^']*\)'$/\1/p" windows/scripts/theme-manager.ps1)"
+          npm_package="$(node -p "require('./package.json').version")"
+          npm_installer="$(sed -n 's/^const CLI_VERSION = "\([^"]*\)";$/\1/p' script/npm-install.mjs)"
           test -n "$expected"
           test "$common" = "$expected"
           test "$macos_injector" = "$expected"
           test "$windows_injector" = "$expected"
           test "$windows_updater" = "$expected"
           test "$windows_manager" = "$expected"
+          test "$npm_package" = "$expected"
+          test "$npm_installer" = "$expected"
 
       - name: Run portable Node.js regressions
         shell: bash
         run: |
           node script/update-feed.mjs validate
+          npm test
           node --test macos/tests/*.test.mjs
           node --test windows/tests/*.test.mjs
           node macos/scripts/injector.mjs --check-payload >/dev/null

@@ -130,8 +130,17 @@ final class ThemeStore: ObservableObject {
 
   init() {
     try? FileManager.default.createDirectory(at: themesRoot, withIntermediateDirectories: true)
+    let repairReport = ThemePackageService.repairBuiltinThemes(
+      from: bundledThemeSourceRoots(),
+      into: themesRoot
+    )
     updateService.onThemeInstalled = { [weak self] in self?.reload() }
     reload()
+    if repairReport.repairedCount > 0 {
+      status = "已自动补齐 \(repairReport.repairedCount) 套内置主题"
+    } else if !repairReport.isComplete {
+      status = "内置主题资源不完整，请重新运行完整安装包"
+    }
     installThemeCreatorSkill(silent: true)
     updateService.scheduleAutomaticCheck()
     let monitor = Timer(timeInterval: 1.5, repeats: true) { [weak self] _ in
@@ -325,6 +334,14 @@ final class ThemeStore: ObservableObject {
   private func bundledThemeCreatorSkillRoot() -> URL? {
     Bundle.main.resourceURL?
       .appendingPathComponent("Skills/codex-skin-theme-creator", isDirectory: true)
+  }
+
+  private func bundledThemeSourceRoots() -> [URL] {
+    var roots = [engineRoot.appendingPathComponent("themes", isDirectory: true)]
+    if let resources = Bundle.main.resourceURL {
+      roots.append(resources.appendingPathComponent("Themes", isDirectory: true))
+    }
+    return roots
   }
 
   private func themeCreatorSkillIsCurrent() -> Bool {

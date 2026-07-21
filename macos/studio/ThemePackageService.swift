@@ -42,6 +42,14 @@ struct ValidatedThemePackage {
   let sourceDirectory: URL
 }
 
+struct BuiltinThemeRepairReport {
+  let repairedIDs: [String]
+  let unavailableIDs: [String]
+
+  var repairedCount: Int { repairedIDs.count }
+  var isComplete: Bool { unavailableIDs.isEmpty }
+}
+
 enum ThemePackageError: LocalizedError {
   case invalid(String)
 
@@ -180,6 +188,84 @@ enum ThemePackageService {
     }
   }
 
+  /// Restores missing or incomplete built-in themes from the first complete
+  /// source root that contains each catalog entry. Existing complete themes are
+  /// left untouched so launching the manager does not repeatedly copy artwork.
+  static func repairBuiltinThemes(
+    from sourceRoots: [URL],
+    into themesRoot: URL
+  ) -> BuiltinThemeRepairReport {
+    var repairedIDs: [String] = []
+    var unavailableIDs: [String] = []
+
+    for themeID in BuiltinThemeCatalog.orderedIDs {
+      let destination = themesRoot.appendingPathComponent(themeID, isDirectory: true)
+      if isCompleteBuiltinTheme(at: destination, expectedID: themeID) { continue }
+
+      var repaired = false
+      for sourceRoot in sourceRoots {
+        let source = sourceRoot.appendingPathComponent(themeID, isDirectory: true)
+        guard isCompleteBuiltinTheme(at: source, expectedID: themeID) else { continue }
+        do {
+          try installBuiltinTheme(from: source, id: themeID, into: themesRoot)
+          repairedIDs.append(themeID)
+          repaired = true
+          break
+        } catch {
+          continue
+        }
+      }
+      if !repaired { unavailableIDs.append(themeID) }
+    }
+
+    return BuiltinThemeRepairReport(
+      repairedIDs: repairedIDs,
+      unavailableIDs: unavailableIDs
+    )
+  }
+
+  private static func installBuiltinTheme(
+    from source: URL,
+    id themeID: String,
+    into themesRoot: URL
+  ) throws {
+    let fileManager = FileManager.default
+    try fileManager.createDirectory(at: themesRoot, withIntermediateDirectories: true)
+    let destination = themesRoot.appendingPathComponent(themeID, isDirectory: true)
+    let token = UUID().uuidString
+    let staging = themesRoot.appendingPathComponent(".\(themeID).repairing.\(token)", isDirectory: true)
+    let backup = themesRoot.appendingPathComponent(".\(themeID).backup.\(token)", isDirectory: true)
+    try? fileManager.removeItem(at: staging)
+    try? fileManager.removeItem(at: backup)
+
+    do {
+      try fileManager.copyItem(at: source, to: staging)
+      guard isCompleteBuiltinTheme(at: staging, expectedID: themeID) else {
+        throw ThemePackageError.invalid("内置主题修复源不完整：\(themeID)")
+      }
+      if fileManager.fileExists(atPath: destination.path) {
+        try fileManager.moveItem(at: destination, to: backup)
+      }
+      do {
+        try fileManager.moveItem(at: staging, to: destination)
+        try? fileManager.removeItem(at: backup)
+      } catch {
+        if fileManager.fileExists(atPath: backup.path),
+           !fileManager.fileExists(atPath: destination.path) {
+          try? fileManager.moveItem(at: backup, to: destination)
+        }
+        throw error
+      }
+    } catch {
+      try? fileManager.removeItem(at: staging)
+      if fileManager.fileExists(atPath: backup.path),
+         !fileManager.fileExists(atPath: destination.path) {
+        try? fileManager.moveItem(at: backup, to: destination)
+      }
+      throw error
+    }
+  }
+
   static func create(draft: ThemeDraft, in themesRoot: URL, replacing: Bool) throws {
     try validateDraft(draft)
     try requireRegularFile(draft.sourceImageURL, label: "源图片", maximumBytes: 50 * 1024 * 1024)
@@ -263,6 +349,50 @@ enum ThemePackageService {
     let formatter = DateFormatter()
     formatter.dateFormat = "yyyyMMdd-HHmmss"
     return "custom-\(formatter.string(from: Date()))"
+  }
+
+  private static func isCompleteBuiltinTheme(at directory: URL, expectedID: String) -> Bool {
+    let manifestURL = directory.appendingPathComponent("theme.json")
+    guard let data = try? Data(contentsOf: manifestURL),
+          let manifest = try? JSONDecoder().decode(ThemeManifest.self, from: data),
+          manifest.schemaVersion == 2,
+          manifest.id == expectedID,
+          manifest.image == "background.png",
+          manifest.preview == "preview.png",
+          manifest.avatarOverlay == "show",
+          let style = manifest.style, !style.isEmpty,
+          let appearance = manifest.appearance,
+          ["auto", "light", "dark"].contains(appearance)
+    else { return false }
+
+    let backgroundURL = directory.appendingPathComponent("background.png")
+    let previewURL = directory.appendingPathComponent("preview.png")
+    do {
+      try requireRegularFile(manifestURL, label: "theme.json", maximumBytes: 256 * 1024)
+      try requireRegularFile(backgroundURL, label: "background.png", maximumBytes: 30 * 1024 * 1024)
+      try requireRegularFile(previewURL, label: "preview.png", maximumBytes: 10 * 1024 * 1024)
+      try requirePNG(backgroundURL, label: "background.png")
+      try requirePNG(previewURL, label: "preview.png")
+      try validateImage(
+        backgroundURL,
+        label: "background.png",
+        minimumWidth: 1200,
+        minimumHeight: 400,
+        maximumWidth: 12000,
+        maximumHeight: 4000
+      )
+      try validateImage(
+        previewURL,
+        label: "preview.png",
+        minimumWidth: 600,
+        minimumHeight: 200,
+        maximumWidth: 6000,
+        maximumHeight: 2000
+      )
+    } catch {
+      return false
+    }
+    return true
   }
 
   private static func validateDraft(_ draft: ThemeDraft) throws {

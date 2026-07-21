@@ -75,5 +75,6 @@ if ! /usr/bin/hdiutil create \
     "$DMG_ROOT" >/dev/null
 fi
 
+"$SCRIPT_DIR/verify-installer-dmg-macos.sh" "$OUTPUT"
 SHA256="$(/usr/bin/shasum -a 256 "$OUTPUT" | /usr/bin/awk '{print $1}')"
 /usr/bin/printf 'Created %s\nSHA-256 %s\n' "$OUTPUT" "$SHA256"

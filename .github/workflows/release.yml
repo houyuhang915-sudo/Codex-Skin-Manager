@@ -21,7 +21,9 @@ jobs:
         run: |
           version="${GITHUB_REF_NAME#v}"
           test "$version" = "$(tr -d '\r\n' < macos/VERSION)"
+          test "$version" = "$(node -p "require('./package.json').version")"
           node script/update-feed.mjs validate
+          npm test
           node --test macos/tests/*.test.mjs windows/tests/*.test.mjs
 
   macos:

@@ -171,6 +171,7 @@ fi
 /usr/bin/grep -q 'Curve25519.Signing.PublicKey' "$ROOT/studio/UpdateService.swift"
 /usr/bin/grep -q -- '--automatic-update' "$ROOT/installer/DreamSkinInstaller.swift"
 /usr/bin/grep -q 'CODEX_WAS_RUNNING' "$ROOT/scripts/install-dream-skin-macos.sh"
+/usr/bin/grep -q 'verify-installer-dmg-macos.sh' "$ROOT/scripts/build-installer-dmg-macos.sh"
 if /usr/bin/grep -q 'seed_bundled_presets\|preset-gothic-void-crusade' \
   "$ROOT/scripts/install-dream-skin-macos.sh"; then
   printf 'The macOS installer still references the retired preset seeding path.\n' >&2
@@ -189,7 +190,8 @@ if /usr/bin/xcrun --find swiftc >/dev/null 2>&1; then
     -o "$TMP/theme-package-tests"
   "$TMP/theme-package-tests" \
     "$ROOT/themes/rem-rezero/background.png" \
-    "$TMP/theme-package-service"
+    "$TMP/theme-package-service" \
+    "$ROOT/themes"
   /usr/bin/xcrun swiftc -parse-as-library -typecheck \
     -framework SwiftUI -framework AppKit "$ROOT/installer/DreamSkinInstaller.swift"
   /usr/bin/xcrun swiftc -parse-as-library -framework CryptoKit \
@@ -206,6 +208,7 @@ if /usr/bin/xcrun --find swiftc >/dev/null 2>&1; then
   [ -x "$TMP/Codex 皮肤管理器.app/Contents/MacOS/CodexSkinManager" ]
   [ -x "$TMP/Codex 皮肤管理器.app/Contents/Resources/Tools/CodexThemeCreator" ]
   [ -f "$TMP/Codex 皮肤管理器.app/Contents/Resources/Skills/codex-skin-theme-creator/SKILL.md" ]
+  /usr/bin/grep -q 'repairBuiltinThemes' "$ROOT/studio/DreamSkinStudio.swift"
   CODEX_SKIN_THEME_CLI="$TMP/Codex 皮肤管理器.app/Contents/Resources/Tools/CodexThemeCreator" \
     "$NODE" "$REPOSITORY_ROOT/skill/codex-skin-theme-creator/scripts/create-theme.mjs" \
       --image "$ROOT/themes/rem-rezero/background.png" \
@@ -223,7 +226,7 @@ if /usr/bin/xcrun --find swiftc >/dev/null 2>&1; then
   ' "$TMP/skill-result.json" "$TMP/skill-themes/skill-created-test/theme.json"
   [ "$(/usr/bin/plutil -extract CFBundleIconFile raw "$TMP/Codex 皮肤管理器.app/Contents/Info.plist")" = "DreamSkinAppIcon.icns" ]
   [ "$(/usr/bin/plutil -extract CFBundleName raw "$TMP/Codex 皮肤管理器.app/Contents/Info.plist")" = "Codex 皮肤管理器" ]
-  [ "$(/usr/bin/plutil -extract CFBundleShortVersionString raw "$TMP/Codex 皮肤管理器.app/Contents/Info.plist")" = "1.7.1" ]
+  [ "$(/usr/bin/plutil -extract CFBundleShortVersionString raw "$TMP/Codex 皮肤管理器.app/Contents/Info.plist")" = "1.7.2" ]
 fi
 
 CONFIG="$TMP/config.toml"
@@ -241,7 +244,7 @@ BACKUP="$TMP/theme-backup.json"
 "$NODE" "$ROOT/scripts/theme-config.mjs" restore "$CONFIG" "$BACKUP" >/dev/null
 /usr/bin/cmp -s "$CONFIG" "$TMP/original.toml"
 
-/usr/bin/env -u HOME /bin/bash -c '. "$1/scripts/common-macos.sh"; [ -n "$HOME" ] && [ "$SKIN_VERSION" = "1.7.1" ]' _ "$ROOT"
+/usr/bin/env -u HOME /bin/bash -c '. "$1/scripts/common-macos.sh"; [ -n "$HOME" ] && [ "$SKIN_VERSION" = "1.7.2" ]' _ "$ROOT"
 "$ROOT/scripts/doctor-macos.sh" >/dev/null
 
 printf 'PASS: syntax, payload, theme library, Studio build, config round-trip, HOME recovery, signature, and doctor checks.\n'

@@ -1,0 +1,30 @@
+{
+  "name": "codex-skin-manager",
+  "version": "1.7.2",
+  "description": "Signed one-command installer for Codex 皮肤管理器 on macOS and Windows.",
+  "type": "module",
+  "bin": {
+    "codex-skin-manager": "script/npm-install.mjs"
+  },
+  "files": [
+    "script/npm-install.mjs",
+    "LICENSE",
+    "README.md",
+    "README.en.md"
+  ],
+  "scripts": {
+    "test": "node --test script/npm-install.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/houyuhang915-sudo/Codex-Skin-Manager.git"
+  },
+  "homepage": "https://github.com/houyuhang915-sudo/Codex-Skin-Manager#readme",
+  "bugs": {
+    "url": "https://github.com/houyuhang915-sudo/Codex-Skin-Manager/issues"
+  }
+}
