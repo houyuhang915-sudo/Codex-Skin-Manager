@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 2,
+  "id": "caishen-readable",
+  "name": "财神 · 清爽可读",
+  "author": "ChannelerH",
+  "description": "柔和明亮的财神工作主题，保留右侧财气插画，左侧留出干净工作区。",
+  "category": "办公",
+  "style": "caishen-readable",
+  "avatarOverlay": "show",
+  "appearance": "light",
+  "brandSubtitle": "CAISHEN READABLE",
+  "tagline": "财气要有，正文也要看得清。",
+  "projectPrefix": "财神工位 · ",
+  "projectLabel": "选择项目",
+  "statusText": "CAISHEN READABLE ONLINE",
+  "quote": "多发货 · 多进账",
+  "image": "background.png",
+  "preview": "preview.png",
+  "colors": {
+    "background": "#fff8ef",
+    "panel": "#fffdfa",
+    "panelAlt": "#fff1de",
+    "accent": "#d96b42",
+    "accentAlt": "#e8b866",
+    "secondary": "#2aa876",
+    "highlight": "#f0bd65",
+    "text": "#35251c",
+    "muted": "#7c6253",
+    "line": "rgba(217, 107, 66, .22)"
+  }
+}

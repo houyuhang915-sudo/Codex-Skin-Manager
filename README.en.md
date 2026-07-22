@@ -74,7 +74,7 @@ The screenshots come from real Codex pages. The capture utility hides conversati
 - Persistent macOS menu bar and Windows system tray controls with live status and quick switching
 - In-app update checks, verified downloads, installation, and relaunch
 - Independently updated online theme catalog for smaller theme-only downloads
-- 14 bundled appearances with the stock Codex theme pinned first
+- 15 bundled appearances with the stock Codex theme pinned first
 - Startup repair for missing or incomplete bundled themes using the installed engine copy
 - One-click theme switching with synchronized manager state
 - In-app theme creation from local images
@@ -226,7 +226,7 @@ Disconnected means that there is no active local CDP session with Codex. Open Co
 
 ### Only custom themes appear after installation
 
-Starting with `v1.7.2`, the manager checks its library at launch and restores missing or incomplete built-in themes from `~/.codex/codex-dream-skin-studio/themes`. If it reports that bundled resources are incomplete, the manager app was copied by itself or the engine copy is also missing; rerun `安装 Codex 皮肤管理器.app` from the complete DMG. The release build now mounts every generated DMG and proves that all 14 themes can be installed before publishing it.
+Starting with `v1.7.2`, the manager checks its library at launch and restores missing or incomplete built-in themes from `~/.codex/codex-dream-skin-studio/themes`. If it reports that bundled resources are incomplete, the manager app was copied by itself or the engine copy is also missing; rerun `安装 Codex 皮肤管理器.app` from the complete DMG. The release build now mounts every generated DMG and proves that all 15 themes can be installed before publishing it.
 
 ### Codex changed theme but the manager still shows the previous theme
 
@@ -310,7 +310,7 @@ See [docs/theme-format.md](./docs/theme-format.md) for all fields and a complete
 
 ## Bundled Themes
 
-The library includes the stock Codex appearance, Salary Cat, Hatsune Miku, Nailong, Cyrene, Blue Archive Ensemble, Cartethyia, Furina, Firefly, Saber, Asuka, Rem, People's AI, and KUN Black Gold Stage.
+The library includes the stock Codex appearance, Salary Cat, Hatsune Miku, Nailong, Cyrene, Blue Archive Ensemble, Cartethyia, Furina, Firefly, Saber, Asuka, Rem, People's AI, KUN Black Gold Stage, and Caishen Readable.
 
 ## Runtime Model
 
