@@ -1,6 +1,6 @@
 # Codex 皮肤管理器（Windows）
 
-Windows 版与 macOS 版使用相同的 14 套 schema 2 单主图主题，通过本机回环 CDP 为 Microsoft Store 版 Codex 应用主题。
+Windows 版与 macOS 版使用相同的 15 套 schema 2 单主图主题，通过本机回环 CDP 为 Microsoft Store 版 Codex 应用主题。
 
 ## 安装
 
@@ -44,7 +44,7 @@ my-theme/
 
 ## 内置主题
 
-Codex 默认原版、月薪喵打卡、初音未来、奶龙晴空、昔涟、蔚蓝档案、卡提希娅、芙宁娜、流萤、Saber、明日香、蕾姆、OpenAI 是人民的 AI、KUN 黑金舞台。
+Codex 默认原版、月薪喵打卡、初音未来、奶龙晴空、昔涟、蔚蓝档案、卡提希娅、芙宁娜、流萤、Saber、明日香、蕾姆、OpenAI 是人民的 AI、KUN 黑金舞台、财神 · 清爽可读。
 
 ## 测试
 
